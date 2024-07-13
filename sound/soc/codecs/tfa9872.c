@@ -181,6 +181,7 @@ static bool tfa987x_setup_dcdc(struct device *dev, struct regmap *rmap, u16 rev)
 					TFA9872_DCDC_CTRL0_DCVOS_MSK,
 					FIELD_PREP(TFA9872_DCDC_CTRL0_DCVOS_MSK, dcvos));
 		break;
+	case 0x73:
 	case 0x74:
 		if (!FIELD_FIT(TFA9874_DCDC_CTRL6_DCVOF_MSK, dcvof) ||
 		    !FIELD_FIT(TFA9874_DCDC_CTRL6_DCVOS_MSK, dcvos))
@@ -235,6 +236,7 @@ static int tfa987x_i2c_probe(struct i2c_client *i2c)
 	}
 
 	switch (rev) {
+	case 0x0b73:
 	case 0x1b72:
 	case 0x2b72:
 	case 0x3b72:
@@ -301,6 +303,7 @@ static int tfa987x_i2c_probe(struct i2c_client *i2c)
 
 static const struct of_device_id tfa987x_of_match[] = {
 	{ .compatible = "nxp,tfa9872" },
+	{ .compatible = "nxp,tfa9873" },
 	{ .compatible = "nxp,tfa9874" },
 	{ }
 };
@@ -315,5 +318,5 @@ static struct i2c_driver tfa987x_i2c_driver = {
 };
 module_i2c_driver(tfa987x_i2c_driver);
 
-MODULE_DESCRIPTION("ASoC NXP Semiconductors TFA9872/TFA9874 driver");
+MODULE_DESCRIPTION("ASoC NXP Semiconductors TFA9872/TFA9873/TFA9874 driver");
 MODULE_LICENSE("GPL v2");
