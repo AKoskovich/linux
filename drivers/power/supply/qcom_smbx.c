@@ -160,7 +160,7 @@ enum smb_generation {
 
 #define AICL_RERUN_TIME_CFG				0x661
 #define AICL_RERUN_TIME_MASK				GENMASK(1, 0)
-#define AIC_RERUN_TIME_3_SECS				0x0
+#define AICL_RERUN_TIME_12S				0x1
 
 /* FIXME: probably remove this so we get parallel charging? */
 #define STAT_CFG					0x690
@@ -1026,6 +1026,12 @@ static int smb_probe(struct platform_device *pdev)
 	if (rc < 0)
 		return dev_err_probe(chip->dev, rc,
 				     "Couldn't write fast charge current cfg");
+
+	rc = regmap_write_bits(chip->regmap, chip->base + AICL_RERUN_TIME_CFG,
+			       AICL_RERUN_TIME_MASK, AICL_RERUN_TIME_12S);
+	if (rc < 0)
+		return dev_err_probe(chip->dev, rc,
+				     "Couldn't write fast AICL rerun time");
 
 	/* Initialise charger state */
 	schedule_delayed_work(&chip->status_change_work, 0);
