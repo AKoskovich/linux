@@ -872,14 +872,6 @@ static const struct smb_init_register smb_init_seq[] = {
 	{ .addr = PRE_CHARGE_CURRENT_CFG,
 	  .mask = PRE_CHARGE_CURRENT_SETTING_MASK,
 	  .val = 500000 / CURRENT_SCALE_FACTOR },
-	/*
-	 * This overrides all of the current limit options exposed to userspace
-	 * and prevents the device from pulling more than ~1A. This is done
-	 * to minimise potential fire hazard risks.
-	 */
-	{ .addr = FAST_CHARGE_CURRENT_CFG,
-	  .mask = FAST_CHARGE_CURRENT_SETTING_MASK,
-	  .val = 1000000 / CURRENT_SCALE_FACTOR },
 };
 
 static int smb_init_hw(struct smb_chip *chip)
@@ -1025,6 +1017,19 @@ static int smb_probe(struct platform_device *pdev)
 		return dev_err_probe(chip->dev, rc, "Couldn't set wake irq\n");
 
 	platform_set_drvdata(pdev, chip);
+
+	/*
+	 * This overrides all of the other current limit configs and is
+	 * expected to be used for setting limits based on temperature.
+	 * Program the value from the battery's constant-charge-current-max,
+	 * defaulting to DCP_CURRENT_UA if not specified in DT.
+	 */
+	rc = regmap_write(chip->regmap, chip->base + FAST_CHARGE_CURRENT_CFG,
+			  chip->batt_info->constant_charge_current_max_ua
+			  / CURRENT_SCALE_FACTOR);
+	if (rc < 0)
+		return dev_err_probe(chip->dev, rc,
+				     "Couldn't write fast charge current cfg");
 
 	/* Initialise charger state */
 	schedule_delayed_work(&chip->status_change_work, 0);
