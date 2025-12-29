@@ -69,7 +69,9 @@
 #include <linux/timekeeping.h>
 #endif
 #include "focaltech_common.h"
+#if IS_ENABLED(CONFIG_NT_TOUCH_NOTIFIER)
 #include <linux/soc/qcom/touchpanel_event_notify.h>
+#endif
 
 /*****************************************************************************
 * Private constant and macro definitions using #define

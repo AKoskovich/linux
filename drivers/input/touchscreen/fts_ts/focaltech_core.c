@@ -36,20 +36,6 @@
 #include <linux/of_gpio.h>
 #include <linux/of_irq.h>
 
-#if IS_ENABLED(CONFIG_DRM)
-#if IS_ENABLED(CONFIG_DRM_PANEL)
-#include <drm/drm_panel.h>
-#include <linux/soc/qcom/panel_event_notifier.h>
-
-#else
-#include <linux/msm_drm_notify.h>
-#endif //CONFIG_DRM_PANEL
-
-#elif IS_ENABLED(CONFIG_FB)
-#include <linux/notifier.h>
-#include <linux/fb.h>
-#include <uapi/linux/fb.h>
-#endif //CONFIG_DRM
 #include "focaltech_core.h"
 
 /*****************************************************************************
@@ -660,26 +646,32 @@ __attribute__((unused)) static int fts_fod_resume(struct fts_ts_data *ts_data)
 
 void fts_fod_report_key(struct fts_ts_data *ts_data)
 {
+#if IS_ENABLED(CONFIG_NT_TOUCH_NOTIFIER)
     struct touchpanel_coordinate coordinate;
     memset(&coordinate, 0, sizeof(coordinate));
+#endif
 
     if ((ts_data->fod_fp_down) && (!ts_data->fp_down_report)) {
         ts_data->fp_down_report = 1;
         input_report_key(ts_data->input_dev, KEY_GESTURE_FOD, 1);
         input_sync(ts_data->input_dev);
+        FTS_DEBUG("KEY_GESTURE_FOD, 1\n");
+#if IS_ENABLED(CONFIG_NT_TOUCH_NOTIFIER)
         coordinate.x = ts_data->fp_x;
         coordinate.y = ts_data->fp_y;
-        FTS_DEBUG("KEY_GESTURE_FOD, 1\n");
         touchpanel_event_call_notifier(TOUCHPANEL_EVENT_NOTIFIER_EVENT_FINGER_DOWN, (void *)&coordinate);
+#endif
     }
     else if ((!ts_data->fod_fp_down) && (ts_data->fp_down_report)) {
         ts_data->fp_down_report = 0;
         input_report_key(ts_data->input_dev, KEY_GESTURE_FOD, 0);
         input_sync(ts_data->input_dev);
+        FTS_DEBUG("KEY_GESTURE_FOD, 0\n");
+#if IS_ENABLED(CONFIG_NT_TOUCH_NOTIFIER)
         coordinate.x = ts_data->fp_x;
         coordinate.y = ts_data->fp_y;
-        FTS_DEBUG("KEY_GESTURE_FOD, 0\n");
         touchpanel_event_call_notifier(TOUCHPANEL_EVENT_NOTIFIER_EVENT_FINGER_UP, (void *)&coordinate);
+#endif
         if (ts_data->fod_mode == FTS_FOD_UNLOCK) {
             fts_fod_set_reg(DISABLE);
         }
@@ -1994,13 +1986,21 @@ static int fts_parse_dt(struct device *dev, struct fts_ts_platform_data *pdata)
     }
 
     /* reset, irq gpio info */
+#if (KERNEL_VERSION(6, 2, 0) <= LINUX_VERSION_CODE)
+    pdata->reset_gpio = of_get_named_gpio(np, "focaltech,reset-gpio", 0);
+#else
     pdata->reset_gpio = of_get_named_gpio_flags(np, "focaltech,reset-gpio",
                         0, &pdata->reset_gpio_flags);
+#endif
     if (pdata->reset_gpio < 0)
         FTS_ERROR("Unable to get reset_gpio");
 
+#if (KERNEL_VERSION(6, 2, 0) <= LINUX_VERSION_CODE)
+    pdata->irq_gpio = of_get_named_gpio(np, "focaltech,irq-gpio", 0);
+#else
     pdata->irq_gpio = of_get_named_gpio_flags(np, "focaltech,irq-gpio",
                       0, &pdata->irq_gpio_flags);
+#endif
     if (pdata->irq_gpio < 0)
         FTS_ERROR("Unable to get irq_gpio");
 
@@ -2150,197 +2150,6 @@ static void fts_resume_work(struct work_struct *work)
 {
     struct fts_ts_data *ts_data = container_of(work, struct fts_ts_data, resume_work);
     fts_ts_resume(ts_data->dev);
-}
-
-
-#if IS_ENABLED(CONFIG_DRM)
-#if IS_ENABLED(CONFIG_DRM_PANEL)
-static struct drm_panel *active_panel;
-
-static int drm_check_dt(struct fts_ts_data *ts_data)
-{
-    int i = 0;
-    int count = 0;
-    struct device_node *node = NULL;
-    struct drm_panel *panel = NULL;
-    struct device_node *np = NULL;
-
-    if (ts_data && ts_data->dev && ts_data->dev->of_node) {
-        np = ts_data->dev->of_node;
-        count = of_count_phandle_with_args(np, "panel", NULL);
-        if (count <= 0) {
-            FTS_ERROR("find drm_panel count(%d) fail", count);
-            return -ENODEV;
-        }
-
-        for (i = 0; i < count; i++) {
-            node = of_parse_phandle(np, "panel", i);
-            panel = of_drm_find_panel(node);
-            of_node_put(node);
-            if (!IS_ERR(panel)) {
-                FTS_INFO("find drm_panel successfully");
-                active_panel = panel;
-                return 0;
-            }
-        }
-    }
-
-    FTS_ERROR("no find drm_panel");
-    return -ENODEV;
-}
-#endif //CONFIG_DRM_PANEL
-#endif //CONFIG_DRM
-
-#if 0
-static int fb_notifier_callback(struct notifier_block *self, unsigned long event, void *v)
-{
-    struct fts_ts_data *ts_data = container_of(self, struct fts_ts_data, fb_notif);
-    FTS_FUNC_ENTER();
-    if (ts_data && v) {
-#if IS_ENABLED(CONFIG_DRM)
-
-#if IS_ENABLED(CONFIG_DRM_PANEL)
-        int blank_value = *((int *)(((struct drm_panel_notifier *)v)->data));
-        const unsigned long event_enum[2] = {DRM_PANEL_EARLY_EVENT_BLANK, DRM_PANEL_EVENT_BLANK};
-        const int blank_enum[2] = {DRM_PANEL_BLANK_POWERDOWN, DRM_PANEL_BLANK_UNBLANK};
-#else //CONFIG_DRM_PANEL
-        int blank_value = *((int *)(((struct msm_drm_notifier *)v)->data));
-        const unsigned long event_enum[2] = {MSM_DRM_EARLY_EVENT_BLANK, MSM_DRM_EVENT_BLANK};
-        const int blank_enum[2] = {MSM_DRM_BLANK_POWERDOWN, MSM_DRM_BLANK_UNBLANK};
-#endif //CONFIG_DRM_PANEL
-
-#elif IS_ENABLED(CONFIG_FB)
-        const unsigned long event_enum[2] = {FB_EARLY_EVENT_BLANK, FB_EVENT_BLANK};
-        const int blank_enum[2] = {FB_BLANK_POWERDOWN, FB_BLANK_UNBLANK};
-        int blank_value = *((int *)(((struct fb_event *)v)->data));
-#endif //CONFIG_DRM
-        FTS_INFO("notifier,event:%lu,blank:%d", event, blank_value);
-        if ((blank_enum[1] == blank_value) && (event_enum[1] == event)) {
-            queue_work(fts_data->ts_workqueue, &fts_data->resume_work);
-        } else if ((blank_enum[0] == blank_value) && (event_enum[0] == event)) {
-            cancel_work_sync(&fts_data->resume_work);
-            fts_ts_suspend(ts_data->dev);
-        } else {
-            FTS_DEBUG("notifier,event:%lu,blank:%d, not care", event, blank_value);
-        }
-    } else {
-        FTS_ERROR("ts_data/v is null");
-        return -EINVAL;
-    }
-    FTS_FUNC_EXIT();
-    return 0;
-}
-#endif
-
-static void fts_panel_notifier_callback(enum panel_event_notifier_tag tag,
-		struct panel_event_notification *notification, void *client_data)
-{
-	struct fts_ts_data *ts_data = client_data;
-	
-    if (!notification) {
-        FTS_ERROR("Invalid notification\n");
-    }
-
-	FTS_DEBUG("Notification type:%d, early_trigger:%d, esd_recoverying:%d\n",
-			notification->notif_type,
-			notification->notif_data.early_trigger, notification->notif_data.esd_recoverying);
-
-	/*if TP receive notification when esd recovery, ignore this notification*/
-	if (notification->notif_data.esd_recoverying) {
-		FTS_INFO("esd_recoverying is true, do nothing here\n");
-		return;
-	}
-
-    switch (notification->notif_type) {
-    case DRM_PANEL_EVENT_UNBLANK:
-        if (notification->notif_data.early_trigger)
-            FTS_DEBUG("resume notification pre commit\n");
-        else
-            queue_work(fts_data->ts_workqueue, &fts_data->resume_work);
-        break;
-    case DRM_PANEL_EVENT_BLANK:
-        if (notification->notif_data.early_trigger) {
-            cancel_work_sync(&fts_data->resume_work);
-            fts_ts_suspend(ts_data->dev);
-        } else {
-            FTS_DEBUG("suspend notification post commit\n");
-        }
-        break;
-    case DRM_PANEL_EVENT_BLANK_LP:
-        FTS_DEBUG("received lp event\n");
-        cancel_work_sync(&fts_data->resume_work);
-        fts_ts_suspend(ts_data->dev);
-        break;
-    case DRM_PANEL_EVENT_FPS_CHANGE:
-        FTS_DEBUG("shashank:Received fps change old fps:%d new fps:%d\n",
-                         notification->notif_data.old_fps,
-                         notification->notif_data.new_fps);
-        break;
-    default:
-        FTS_DEBUG("notification serviced :%d\n",
-                         notification->notif_type);
-        break;
-    }
-
-}
-
-static int fts_notifier_callback_init(struct fts_ts_data *ts_data)
-{
-    int ret = 0;
-	void *cookie;
-    FTS_FUNC_ENTER();
-#if IS_ENABLED(CONFIG_DRM)
-//    ts_data->fb_notif.notifier_call = fb_notifier_callback;
-#if IS_ENABLED(CONFIG_DRM_PANEL)
-    ret = drm_check_dt(ts_data);
-    if (ret) FTS_ERROR("parse drm-panel fail");
-    FTS_INFO("init notifier with drm_panel_notifier_register");
-    if (active_panel) {
-        cookie = panel_event_notifier_register(PANEL_EVENT_NOTIFICATION_PRIMARY,
-                PANEL_EVENT_NOTIFIER_CLIENT_PRIMARY_TOUCH, active_panel,
-                fts_panel_notifier_callback, ts_data);
-        ts_data->notifier_cookie = cookie;
-        if (!cookie) FTS_ERROR("[DRM]panel_notifier_register fail: %d", cookie);
-    }
-#else
-	ts_data->notifier_cookie = cookie;
-    FTS_INFO("init notifier with drm_register_client:%d\n", active_panel);
-//    ret = msm_drm_register_client(&ts_data->fb_notif);
-//    if (ret) FTS_ERROR("[DRM]msm_drm_register_client fail: %d", ret);
-#endif //CONFIG_DRM_PANEL
-
-#elif 0
-    FTS_INFO("init notifier with fb_register_client");
-    ts_data->fb_notif.notifier_call = fb_notifier_callback;
-    ret = fb_register_client(&ts_data->fb_notif);
-    if (ret) {
-        FTS_ERROR("[FB]Unable to register fb_notifier: %d", ret);
-    }
-
-#endif //CONFIG_DRM
-    FTS_FUNC_EXIT();
-    return ret;
-}
-
-
-static int fts_notifier_callback_exit(struct fts_ts_data *ts_data)
-{
-    FTS_FUNC_ENTER();
-#if IS_ENABLED(CONFIG_DRM)
-#if IS_ENABLED(CONFIG_DRM_PANEL)
-    if (active_panel && ts_data->notifier_cookie)
-        panel_event_notifier_unregister(ts_data->notifier_cookie);
-#else
-//    if (msm_drm_unregister_client(&ts_data->fb_notif))
-//        FTS_ERROR("[DRM]Error occurred while unregistering fb_notifier.");
-#endif
-
-#elif 0
-    if (fb_unregister_client(&ts_data->fb_notif))
-        FTS_ERROR("[FB]Error occurred while unregistering fb_notifier.");
-#endif //CONFIG_DRM
-    FTS_FUNC_EXIT();
-    return 0;
 }
 
 long int FTS_CHIP_TYPE = _FT3683G;
@@ -2495,10 +2304,6 @@ int fts_ts_probe_entry(struct fts_ts_data *ts_data)
     ts_data->pm_suspend = false;
 #endif
 
-    ret = fts_notifier_callback_init(ts_data);
-    if (ret) {
-        FTS_ERROR("init notifier callback fail");
-    }
     ret = fts_read_reg(FTS_REG_FW_VER, &fwver);
     ts_data->fwver = fwver;
     FTS_INFO("FW ver = %02x", fwver);
@@ -2561,7 +2366,6 @@ int fts_ts_remove_entry(struct fts_ts_data *ts_data)
 {
     FTS_FUNC_ENTER();
     cancel_work_sync(&ts_data->resume_work);
-    fts_notifier_callback_exit(ts_data);
     free_irq(ts_data->irq, ts_data);
     fts_fwupg_exit(ts_data);
     fts_esdcheck_exit(ts_data);
