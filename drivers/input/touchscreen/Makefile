@@ -131,3 +131,17 @@ eswin_ts-y := \
 	eswin_touch/eswin_eph861x_tlv_command.o \
 	eswin_touch/eswin_eph861x_tlv_report.o
 obj-y += eswin_ts.o
+
+fts_ts-y := \
+	fts_ts/focaltech_flash/focaltech_upgrade_ft3681.o \
+	fts_ts/focaltech_flash/focaltech_upgrade_ft3683g.o \
+	fts_ts/focaltech_core.o \
+	fts_ts/focaltech_debug.o \
+	fts_ts/focaltech_esdcheck.o \
+	fts_ts/focaltech_ex_fun.o \
+	fts_ts/focaltech_ex_mode.o \
+	fts_ts/focaltech_flash.o \
+	fts_ts/focaltech_gesture.o \
+	fts_ts/focaltech_point_report_check.o \
+	fts_ts/focaltech_spi_v2.o
+obj-y += fts_ts.o
