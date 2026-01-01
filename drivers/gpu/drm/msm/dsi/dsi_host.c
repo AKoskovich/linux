@@ -741,6 +741,7 @@ static inline enum dsi_vid_dst_format
 dsi_get_vid_fmt(const enum mipi_dsi_pixel_format mipi_fmt)
 {
 	switch (mipi_fmt) {
+	case MIPI_DSI_FMT_RGB101010:	return VID_DST_FORMAT_RGB101010;
 	case MIPI_DSI_FMT_RGB888:	return VID_DST_FORMAT_RGB888;
 	case MIPI_DSI_FMT_RGB666:	return VID_DST_FORMAT_RGB666_LOOSE;
 	case MIPI_DSI_FMT_RGB666_PACKED:	return VID_DST_FORMAT_RGB666;
@@ -753,6 +754,7 @@ static inline enum dsi_cmd_dst_format
 dsi_get_cmd_fmt(const enum mipi_dsi_pixel_format mipi_fmt)
 {
 	switch (mipi_fmt) {
+	case MIPI_DSI_FMT_RGB101010:	return CMD_DST_FORMAT_RGB101010;
 	case MIPI_DSI_FMT_RGB888:	return CMD_DST_FORMAT_RGB888;
 	case MIPI_DSI_FMT_RGB666_PACKED:
 	case MIPI_DSI_FMT_RGB666:	return CMD_DST_FORMAT_RGB666;
@@ -1058,13 +1060,15 @@ static void dsi_timing_setup(struct msm_dsi_host *msm_host, bool is_bonded_dsi)
 			dsi_update_dsc_timing(msm_host, true);
 
 		/* image data and 1 byte write_memory_start cmd */
-		if (!msm_host->dsc)
-			wc = hdisplay * mipi_dsi_pixel_format_to_bpp(msm_host->format) / 8 + 1;
-		else
+		if (!msm_host->dsc) {
+			u32 bpp = mipi_dsi_pixel_format_to_bpp(msm_host->format);
+			wc = DIV_ROUND_UP(hdisplay * bpp, 8) + 1;
+		} else {
 			/*
 			 * When DSC is enabled, WC = slice_chunk_size * slice_per_pkt + 1.
 			 */
 			wc = msm_host->dsc->slice_chunk_size * msm_host->dsc_slice_per_pkt + 1;
+		}
 
 		dsi_write(msm_host, REG_DSI_CMD_MDP_STREAM0_CTRL,
 			DSI_CMD_MDP_STREAM0_CTRL_WORD_COUNT(wc) |
@@ -1477,8 +1481,8 @@ static int dsi_cmds2buf_tx(struct msm_dsi_host *msm_host,
 				const struct mipi_dsi_msg *msg)
 {
 	int len, ret;
-	int bllp_len = msm_host->mode->hdisplay *
-			mipi_dsi_pixel_format_to_bpp(msm_host->format) / 8;
+	u32 bpp = mipi_dsi_pixel_format_to_bpp(msm_host->format);
+	int bllp_len = DIV_ROUND_UP(msm_host->mode->hdisplay * bpp, 8);
 
 	len = dsi_cmd_dma_add(msm_host, msg);
 	if (len < 0) {
