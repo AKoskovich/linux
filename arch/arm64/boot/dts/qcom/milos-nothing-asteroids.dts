@@ -28,32 +28,6 @@
 		serial1 = &uart11;
 	};
 
-	chosen {
-		#address-cells = <2>;
-		#size-cells = <2>;
-		ranges;
-
-		framebuffer0: framebuffer@e3940000 {
-			compatible = "simple-framebuffer";
-			reg = <0x0 0xe3940000 0x0 (2392 * 1080 * 4)>;
-			width = <1080>;
-			height = <2392>;
-			stride = <(1080 * 4)>;
-			format = "a8r8g8b8";
-			panel = <&panel>;
-			interconnects = <&mmss_noc MASTER_MDP QCOM_ICC_TAG_ALWAYS
-					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>;
-			clocks = <&gcc GCC_DISP_HF_AXI_CLK>;
-
-			/* Dummy panel for simple-framebuffer dimension info */
-			panel: dummy-panel {
-				compatible = "boe,rm69220";
-				width-mm = <71>;
-				height-mm = <157>;
-			};
-		};
-	};
-
 	gpio-keys {
 		compatible = "gpio-keys";
 
@@ -115,15 +89,6 @@
 			console-size = <0x200000>;
 			pmsg-size = <0x200000>;
 			mem-type = <2>;
-		};
-
-		/*
-		 * ABL is powering down display and controller if this node is
-		 * not named exactly "splash_region".
-		 */
-		splash_region@e3940000 {
-			reg = <0x0 0xe3940000 0x0 0x2b00000>;
-			no-map;
 		};
 	};
 
@@ -605,11 +570,6 @@
 	};
 };
 
-&dispcc {
-	/* Disable for now so simple-framebuffer continues working */
-	status = "disabled";
-};
-
 &gcc {
 	protected-clocks = <GCC_PCIE_1_AUX_CLK>, <GCC_PCIE_1_AUX_CLK_SRC>,
 			   <GCC_PCIE_1_CFG_AHB_CLK>, <GCC_PCIE_1_MSTR_AXI_CLK>,
@@ -619,10 +579,6 @@
 			   <GCC_PCIE_1_SLV_AXI_CLK>, <GCC_PCIE_1_SLV_Q2A_AXI_CLK>;
 };
 
-&gpucc {
-	status = "disabled";
-};
-
 &ipa {
 	firmware-name = "qcom/milos/nothing/asteroids/ipa_fws.mbn";
 	memory-region = <&ipa_fw_mem>;
@@ -630,6 +586,48 @@
 	qcom,gsi-loader = "self";
 
 	status = "disabled";
+};
+
+&mdss {
+	status = "okay";
+};
+
+&mdss_dsi0 {
+	vdda-supply = <&vreg_l4b>;
+
+	status = "okay";
+
+	panel@0 {
+		compatible = "boe,rm69220";
+		reg = <0>;
+
+		reset-gpios = <&tlmm 12 GPIO_ACTIVE_LOW>;
+
+		vci-supply = <&vreg_l19b>;
+		dvdd-supply = <&vreg_oled_dvdd_1p8>;
+		vddio-supply = <&vreg_l9b>;
+
+		pinctrl-0 = <&disp_reset_n_active>, <&mdp_vsync>;
+		pinctrl-1 = <&disp_reset_n_suspend>, <&mdp_vsync>;
+		pinctrl-names = "default", "sleep";
+
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&mdss_dsi0_out>;
+			};
+		};
+	};
+};
+
+&mdss_dsi0_out {
+	data-lanes = <0 1 2 3>;
+	remote-endpoint = <&panel_in>;
+};
+
+&mdss_dsi0_phy {
+	vdds-supply = <&vreg_l2b>;
+
+	status = "okay";
 };
 
 &pm7550_flash {
@@ -792,6 +790,20 @@
 	gpio-reserved-ranges = <13 1>, /* Display */
 			       <63 2>; /* WLAN UART */
 
+	disp_reset_n_active: disp-reset-n-active-state {
+		pins = "gpio12";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-disable;
+	};
+
+	disp_reset_n_suspend: disp-reset-n-suspend-state {
+		pins = "gpio12";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-down;
+	};
+
 	qup_uart11_sleep_cts: qup-uart11-sleep-cts-state {
 		pins = "gpio48";
 		function = "gpio";
@@ -849,6 +861,13 @@
 		pins = "gpio71";
 		function = "gpio";
 		bias-pull-up;
+	};
+
+	mdp_vsync: mdp-vsync-state {
+		pins = "gpio129";
+		function = "mdp_vsync";
+		drive-strength = <2>;
+		bias-pull-down;
 	};
 };
 
