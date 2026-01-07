@@ -573,6 +573,11 @@ static inline int adreno_is_x285(struct adreno_gpu *gpu)
 	return gpu->info->chip_ids[0] == 0x44070001;
 }
 
+static inline int adreno_is_a810(struct adreno_gpu *gpu)
+{
+	return gpu->info->chip_ids[0] == 0x44010000;
+}
+
 static inline int adreno_is_a840(struct adreno_gpu *gpu)
 {
 	return gpu->info->chip_ids[0] == 0x44050a01;

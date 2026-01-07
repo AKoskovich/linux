@@ -889,7 +889,7 @@ static int a6xx_gmu_fw_start(struct a6xx_gmu *gmu, unsigned int state)
 
 	/* Turn on TCM (Tightly Coupled Memory) retention */
 	if (adreno_is_a7xx(adreno_gpu))
-		a6xx_llc_write(a6xx_gpu, REG_A7XX_CX_MISC_TCM_RET_CNTL, 1);
+		a6xx_cx_write(a6xx_gpu, REG_A7XX_CX_MISC_TCM_RET_CNTL, 1);
 	else if (!adreno_is_a8xx(adreno_gpu))
 		gmu_write(gmu, REG_A6XX_GMU_GENERAL_7, 1);
 
@@ -1181,7 +1181,7 @@ int a6xx_gmu_resume(struct a6xx_gpu *a6xx_gpu)
 
 	/* Check to see if we are doing a cold or warm boot */
 	if (adreno_is_a7xx(adreno_gpu) || adreno_is_a8xx(adreno_gpu)) {
-		status = a6xx_llc_read(a6xx_gpu, REG_A7XX_CX_MISC_TCM_RET_CNTL) == 1 ?
+		status = a6xx_cx_read(a6xx_gpu, REG_A7XX_CX_MISC_TCM_RET_CNTL) == 1 ?
 			GMU_WARM_BOOT : GMU_COLD_BOOT;
 	} else if (gmu->legacy) {
 		status = gmu_read(gmu, REG_A6XX_GMU_GENERAL_7) == 1 ?
@@ -1340,7 +1340,7 @@ int a6xx_gmu_stop(struct a6xx_gpu *a6xx_gpu)
 	 * domain. Usually the GMU does this but only if the shutdown sequence
 	 * was successful
 	 */
-	if (!IS_ERR_OR_NULL(gmu->gxpd))
+	if (!IS_ERR_OR_NULL(gmu->gxpd) && a6xx_gmu_gx_is_on(gmu))
 		pm_runtime_put_sync(gmu->gxpd);
 
 	clk_bulk_disable_unprepare(gmu->nr_clocks, gmu->clocks);
@@ -2228,7 +2228,8 @@ int a6xx_gmu_init(struct a6xx_gpu *a6xx_gpu, struct device_node *node)
 	gmu->mmio_offset = (u32)(start - res->start);
 
 	if (adreno_is_a650_family(adreno_gpu) ||
-	    adreno_is_a7xx(adreno_gpu)) {
+	    adreno_is_a7xx(adreno_gpu) ||
+	    adreno_is_a810(adreno_gpu)) {
 		gmu->rscc = devm_platform_ioremap_resource_byname(pdev, "rscc");
 		if (IS_ERR(gmu->rscc)) {
 			ret = -ENODEV;
