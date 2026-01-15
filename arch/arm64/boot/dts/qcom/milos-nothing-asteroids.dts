@@ -766,6 +766,28 @@
 	status = "okay";
 };
 
+&spi0 {
+	status = "okay";
+
+	touchscreen@0 {
+		compatible = "focaltech,fts_ts";
+		reg = <0>;
+
+		vci-supply = <&vreg_l22b>;
+		vddio-supply = <&vreg_l11b>;
+
+		interrupt-parent = <&tlmm>;
+		interrupts = <19 0x2008>;
+		spi-max-frequency = <12000000>;
+
+		focaltech,irq-gpio = <&tlmm 19 0x2008>;
+		focaltech,reset-gpio = <&tlmm 20 0x00>;
+
+		focaltech,display-coords = <0 0 1080 2392>;
+		focaltech,max-touch-number = <10>;
+	};
+};
+
 &tlmm {
 	gpio-reserved-ranges = <13 1>, /* Display */
 			       <63 2>; /* WLAN UART */
