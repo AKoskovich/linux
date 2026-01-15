@@ -368,7 +368,7 @@
 	};
 
 	firmware {
-		scm: scm {
+		scm: qcom_scm {
 			compatible = "qcom,scm-milos", "qcom,scm";
 			qcom,dload-mode = <&tcsr 0x19000>;
 		};
@@ -2716,6 +2716,8 @@
 				};
 			};
 		};
+
+		qcom_tzlog: tz-log { };
 	};
 
 	thermal-zones {
@@ -3172,7 +3174,7 @@
 		};
 	};
 
-	timer {
+	arch_timer: timer {
 		compatible = "arm,armv8-timer";
 
 		interrupts = <GIC_PPI 13 IRQ_TYPE_LEVEL_LOW 0>,
