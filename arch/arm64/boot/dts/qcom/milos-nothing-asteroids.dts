@@ -579,6 +579,130 @@
 			   <GCC_PCIE_1_SLV_AXI_CLK>, <GCC_PCIE_1_SLV_Q2A_AXI_CLK>;
 };
 
+&i2c7 {
+	status = "okay";
+
+	wl28681: pmic@35 {
+		compatible = "willsemi,wl28681";
+		reg = <0x35>;
+
+		irq-gpios = <&tlmm 126 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&pmr735b_gpios 3 GPIO_ACTIVE_LOW>;
+
+		vin5-supply = <&vreg_bob>;
+		vin6-supply = <&vreg_bob>;
+		vin7-supply = <&vreg_bob>;
+		vin12-supply = <&vreg_s2b>;
+		vin34-supply = <&vreg_bob>;
+
+		status = "okay";
+
+		regulators {
+			WL_LDO1: WL_LDO1 {
+				regulator-name = "WL_LDO1";
+				regulator-min-microvolt = <1000000>;
+				regulator-max-microvolt = <2048000>;
+			};
+
+			WL_LDO2: WL_LDO2 {
+				regulator-name = "WL_LDO2";
+				regulator-min-microvolt = <1000000>;
+				regulator-max-microvolt = <2048000>;
+			};
+
+			WL_LDO3: WL_LDO3 {
+				regulator-name = "WL_LDO3";
+				regulator-min-microvolt = <1500000>;
+				regulator-max-microvolt = <2804000>;
+			};
+
+			WL_LDO4: WL_LDO4 {
+				regulator-name = "WL_LDO4";
+				regulator-min-microvolt = <1500000>;
+				regulator-max-microvolt = <2804000>;
+			};
+
+			WL_LDO5: WL_LDO5 {
+				regulator-name = "WL_LDO5";
+				regulator-min-microvolt = <1500000>;
+				regulator-max-microvolt = <3100000>;
+			};
+
+			WL_LDO6: WL_LDO6 {
+				regulator-name = "WL_LDO6";
+				regulator-min-microvolt = <1500000>;
+				regulator-max-microvolt = <3004000>;
+			};
+
+			WL_LDO7: WL_LDO7 {
+				regulator-name = "WL_LDO7";
+				regulator-min-microvolt = <1500000>;
+				regulator-max-microvolt = <2804000>;
+			};
+		};
+	};
+
+	wl28681_j: pmic@61 {
+		compatible = "willsemi,wl28681";
+		reg = <0x61>;
+
+		irq-gpios = <&tlmm 125 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&pmr735b_gpios 4 GPIO_ACTIVE_LOW>;
+
+		vin5-supply = <&vreg_bob>;
+		vin6-supply = <&vreg_bob>;
+		vin7-supply = <&vreg_bob>;
+		vin12-supply = <&vreg_s2b>;
+		vin34-supply = <&vreg_bob>;
+
+		status = "okay";
+
+		regulators {
+			WL_LDO1_j: WL_LDO1_j {
+				regulator-name = "WL_LDO1_j";
+				regulator-min-microvolt = <1000000>;
+				regulator-max-microvolt = <2048000>;
+			};
+
+			WL_LDO2_j: WL_LDO2_j {
+				regulator-name = "WL_LDO2_j";
+				regulator-min-microvolt = <1000000>;
+				regulator-max-microvolt = <2048000>;
+			};
+
+			WL_LDO3_j: WL_LDO3_j {
+				regulator-name = "WL_LDO3_j";
+				regulator-min-microvolt = <1500000>;
+				regulator-max-microvolt = <2804000>;
+			};
+
+			WL_LDO4_j: WL_LDO4_j {
+				regulator-name = "WL_LDO4_j";
+				regulator-min-microvolt = <1500000>;
+				regulator-max-microvolt = <2804000>;
+			};
+
+			WL_LDO5_j: WL_LDO5_j {
+				regulator-name = "WL_LDO5_j";
+				regulator-min-microvolt = <1500000>;
+				regulator-max-microvolt = <2804000>;
+			};
+
+			WL_LDO6_j: WL_LDO6_j {
+				regulator-name = "WL_LDO6_j";
+				regulator-min-microvolt = <1500000>;
+				regulator-max-microvolt = <2804000>;
+			};
+
+			WL_LDO7_j: WL_LDO7_j {
+				regulator-name = "WL_LDO7_j";
+				regulator-min-microvolt = <1500000>;
+				regulator-max-microvolt = <3100000>;
+			};
+		};
+	};
+};
+
 &ipa {
 	firmware-name = "qcom/milos/nothing/asteroids/ipa_fws.mbn";
 	memory-region = <&ipa_fw_mem>;
