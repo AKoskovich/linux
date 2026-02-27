@@ -477,8 +477,7 @@ static const struct dpu_vbif_dynamic_ot_cfg msm8998_ot_rdwr_cfg[] = {
 	},
 };
 
-static const struct dpu_vbif_cfg msm8996_vbif[] = {
-	{
+static const struct dpu_vbif_cfg msm8996_vbif = {
 	.name = "vbif_rt", .id = VBIF_RT,
 	.base = 0, .len = 0x1040,
 	.default_ot_rd_limit = 32,
@@ -502,11 +501,9 @@ static const struct dpu_vbif_cfg msm8996_vbif[] = {
 		.npriority_lvl = ARRAY_SIZE(msm8998_nrt_pri_lvl),
 		.priority_lvl = msm8998_nrt_pri_lvl,
 		},
-	},
 };
 
-static const struct dpu_vbif_cfg msm8998_vbif[] = {
-	{
+static const struct dpu_vbif_cfg msm8998_vbif = {
 	.name = "vbif_rt", .id = VBIF_RT,
 	.base = 0, .len = 0x1040,
 	.default_ot_rd_limit = 32,
@@ -532,11 +529,9 @@ static const struct dpu_vbif_cfg msm8998_vbif[] = {
 		},
 	.memtype_count = 14,
 	.memtype = {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
-	},
 };
 
-static const struct dpu_vbif_cfg sdm845_vbif[] = {
-	{
+static const struct dpu_vbif_cfg sdm845_vbif = {
 	.name = "vbif_rt", .id = VBIF_RT,
 	.base = 0, .len = 0x1040,
 	.features = BIT(DPU_VBIF_QOS_REMAP),
@@ -552,11 +547,9 @@ static const struct dpu_vbif_cfg sdm845_vbif[] = {
 		},
 	.memtype_count = 14,
 	.memtype = {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3},
-	},
 };
 
-static const struct dpu_vbif_cfg sm8550_vbif[] = {
-	{
+static const struct dpu_vbif_cfg sm8550_vbif = {
 	.name = "vbif_rt", .id = VBIF_RT,
 	.base = 0, .len = 0x1040,
 	.features = BIT(DPU_VBIF_QOS_REMAP),
@@ -572,11 +565,9 @@ static const struct dpu_vbif_cfg sm8550_vbif[] = {
 		},
 	.memtype_count = 16,
 	.memtype = {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3},
-	},
 };
 
-static const struct dpu_vbif_cfg sm8650_vbif[] = {
-	{
+static const struct dpu_vbif_cfg sm8650_vbif = {
 	.name = "vbif_rt", .id = VBIF_RT,
 	.base = 0, .len = 0x1074,
 	.features = BIT(DPU_VBIF_QOS_REMAP),
@@ -592,7 +583,6 @@ static const struct dpu_vbif_cfg sm8650_vbif[] = {
 		},
 	.memtype_count = 16,
 	.memtype = {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3},
-	},
 };
 
 /*************************************************************
