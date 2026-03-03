@@ -230,6 +230,7 @@ static int tfa987x_i2c_probe(struct i2c_client *i2c)
 	struct regulator *vddd;
 	struct regmap *rmap;
 	unsigned int rev;
+	u32 rx_slot = 0;
 	int ret;
 
 	vddd = devm_regulator_get(dev, "vddd");
@@ -311,9 +312,10 @@ static int tfa987x_i2c_probe(struct i2c_client *i2c)
 				 TFA987X_TDM_CFG3_CSE_MSK |
 				 TFA987X_TDM_CFG3_VSE_MSK,
 				 TFA987X_TDM_CFG3_SPKE_MSK);
+	of_property_read_u32(dev->of_node, "nxp,rx-slot-no", &rx_slot);
 	regmap_update_bits(rmap, TFA987X_TDM_CFG6,
 				 TFA987X_TDM_CFG6_SPKS_MSK,
-				 FIELD_PREP(TFA987X_TDM_CFG6_SPKS_MSK, 0));
+				 FIELD_PREP(TFA987X_TDM_CFG6_SPKS_MSK, rx_slot));
 
 	if ((rev & 0xff) == 0x72)
 		regmap_update_bits(rmap, TFA987X_MODE1_DET1,
