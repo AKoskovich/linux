@@ -6,6 +6,8 @@
  */
 
 #include <linux/bitfield.h>
+#include <linux/delay.h>
+#include <linux/gpio/consumer.h>
 #include <linux/i2c.h>
 #include <linux/module.h>
 #include <linux/regmap.h>
@@ -224,6 +226,7 @@ static void tfa987x_regulator_disable(void *data)
 static int tfa987x_i2c_probe(struct i2c_client *i2c)
 {
 	struct device *dev = &i2c->dev;
+	struct gpio_desc *reset;
 	struct regulator *vddd;
 	struct regmap *rmap;
 	unsigned int rev;
@@ -234,6 +237,11 @@ static int tfa987x_i2c_probe(struct i2c_client *i2c)
 		return dev_err_probe(dev, PTR_ERR(vddd),
 				     "Failed to get vddd regulator\n");
 
+	reset = devm_gpiod_get_optional(dev, "reset", GPIOD_OUT_HIGH);
+	if (IS_ERR(reset))
+		return dev_err_probe(dev, PTR_ERR(reset),
+				     "Failed to get reset GPIO\n");
+
 	ret = regulator_enable(vddd);
 	if (ret)
 		return dev_err_probe(dev, ret,
@@ -242,6 +250,12 @@ static int tfa987x_i2c_probe(struct i2c_client *i2c)
 	ret = devm_add_action_or_reset(dev, tfa987x_regulator_disable, vddd);
 	if (ret)
 		return ret;
+
+	if (reset) {
+		usleep_range(1000, 2000);
+		gpiod_set_value_cansleep(reset, 0);
+		usleep_range(1000, 2000);
+	}
 
 	rmap = devm_regmap_init_i2c(i2c, &tfa987x_regmap_config);
 	if (IS_ERR(rmap))
