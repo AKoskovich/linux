@@ -4,6 +4,7 @@
 
 #include <dt-bindings/arm/qcom,ids.h>
 #include <dt-bindings/regulator/qcom,rpmh-regulator.h>
+#include <dt-bindings/sound/qcom,q6asm.h>
 #include <dt-bindings/usb/pd.h>
 
 #include "sm8250.dtsi"
@@ -577,6 +578,38 @@
 	};
 };
 
+&i2c16 {
+	status = "okay";
+
+	speaker_codec_top: audio-codec@34 {
+		compatible = "nxp,tfa9874";
+		reg = <0x34>;
+		reset-gpios = <&tlmm 72 GPIO_ACTIVE_HIGH>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <64 IRQ_TYPE_LEVEL_LOW>;
+		vddd-supply = <&vreg_s4a>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&speaker_top_reset &speaker_top_irq>;
+		#sound-dai-cells = <0>;
+		sound-name-prefix = "Speaker Top";
+		nxp,rx-slot-no = <0>;
+	};
+
+	speaker_codec_bottom: audio-codec@35 {
+		compatible = "nxp,tfa9874";
+		reg = <0x35>;
+		reset-gpios = <&tlmm 73 GPIO_ACTIVE_HIGH>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <63 IRQ_TYPE_LEVEL_LOW>;
+		vddd-supply = <&vreg_s4a>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&speaker_bottom_reset &speaker_bottom_irq>;
+		#sound-dai-cells = <0>;
+		sound-name-prefix = "Speaker Bottom";
+		nxp,rx-slot-no = <1>;
+	};
+};
+
 &adsp {
 	firmware-name = "qcom/sm8250/asus/obiwan/adsp.mbn";
 	status = "okay";
@@ -784,6 +817,23 @@
 	status = "okay";
 };
 
+&q6afedai {
+	dai@16 {
+		reg = <PRIMARY_MI2S_RX>;
+		qcom,sd-lines = <1>;
+	};
+};
+
+&q6asmdai {
+	dai@0 {
+		reg = <MSM_FRONTEND_DAI_MULTIMEDIA1>;
+	};
+};
+
+&rxmacro {
+	status = "okay";
+};
+
 &qupv3_id_0 {
 	status = "okay";
 };
@@ -799,6 +849,34 @@
 &slpi {
 	firmware-name = "qcom/sm8250/asus/obiwan/slpi.mbn";
 	status = "okay";
+};
+
+&sound {
+	compatible = "qcom,sm8250-sndcard";
+	model = "SM8250-ASUS-ROG-Phone-3";
+	pinctrl-names = "default";
+	pinctrl-0 = <&pri_mi2s_active>;
+
+	mm1-dai-link {
+		link-name = "MultiMedia1";
+		cpu {
+			sound-dai = <&q6asmdai MSM_FRONTEND_DAI_MULTIMEDIA1>;
+		};
+	};
+
+	primary-rx-dai-link {
+		link-name = "Primary MI2S Playback";
+		cpu {
+			sound-dai = <&q6afedai PRIMARY_MI2S_RX>;
+		};
+		codec {
+			sound-dai = <&speaker_codec_top>, <&speaker_codec_bottom>;
+		};
+		platform {
+			sound-dai = <&q6routing>;
+		};
+	};
+
 };
 
 &tlmm {
@@ -834,6 +912,22 @@
 		bias-pull-up;
 	};
 
+	speaker_bottom_irq: speaker-bottom-irq-state {
+		pins = "gpio63";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-disable;
+		input-enable;
+	};
+
+	speaker_top_irq: speaker-top-irq-state {
+		pins = "gpio64";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-disable;
+		input-enable;
+	};
+
 	mdp_vsync: mdp-vsync-state {
 		pins = "gpio66";
 		function = "mdp_vsync";
@@ -854,6 +948,22 @@
 		function = "gpio";
 		drive-strength = <12>;
 		bias-pull-down;
+	};
+
+	speaker_top_reset: speaker-top-reset-state {
+		pins = "gpio72";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-disable;
+		output-low;
+	};
+
+	speaker_bottom_reset: speaker-bottom-reset-state {
+		pins = "gpio73";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-disable;
+		output-low;
 	};
 
 	disp_reset_n_active: disp-reset-n-active-state {
