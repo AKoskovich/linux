@@ -9,6 +9,7 @@
 #include <linux/i2c.h>
 #include <linux/module.h>
 #include <linux/regmap.h>
+#include <linux/regulator/consumer.h>
 #include <sound/soc.h>
 
 #define TFA987X_SYS_CTRL0		0x00
@@ -215,12 +216,32 @@ static bool tfa987x_setup_dcdc(struct device *dev, struct regmap *rmap, u16 rev)
 	return true;
 }
 
+static void tfa987x_regulator_disable(void *data)
+{
+	regulator_disable(data);
+}
+
 static int tfa987x_i2c_probe(struct i2c_client *i2c)
 {
 	struct device *dev = &i2c->dev;
+	struct regulator *vddd;
 	struct regmap *rmap;
 	unsigned int rev;
 	int ret;
+
+	vddd = devm_regulator_get(dev, "vddd");
+	if (IS_ERR(vddd))
+		return dev_err_probe(dev, PTR_ERR(vddd),
+				     "Failed to get vddd regulator\n");
+
+	ret = regulator_enable(vddd);
+	if (ret)
+		return dev_err_probe(dev, ret,
+				     "Failed to enable vddd regulator\n");
+
+	ret = devm_add_action_or_reset(dev, tfa987x_regulator_disable, vddd);
+	if (ret)
+		return ret;
 
 	rmap = devm_regmap_init_i2c(i2c, &tfa987x_regmap_config);
 	if (IS_ERR(rmap))
