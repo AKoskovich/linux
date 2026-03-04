@@ -499,7 +499,16 @@ static int qcom_fg_get_capacity(struct qcom_fg_chip *chip, int *val)
 		cap[0] = cap[0] < cap[1] ? cap[0] : cap[1];
 	}
 
-	*val = DIV_ROUND_CLOSEST((cap[0] - 1) * 98, 0xff - 2) + 1;
+	/*
+	 * Map raw values 1-254 to capacity 1-99% with better endpoint
+	 * rounding. Handle 0 and 255 explicitly as 0% and 100%.
+	 */
+	if (cap[0] == 0)
+		*val = 0;
+	else if (cap[0] == 0xff)
+		*val = 100;
+	else
+		*val = DIV_ROUND_CLOSEST((cap[0] - 1) * 98, 0xff - 2) + 1;
 
 	return 0;
 }
