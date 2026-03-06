@@ -705,9 +705,26 @@
 };
 
 &i2c13 {
-	/* Goodix GT9896 touchscreen @ 0x5d */
-
 	status = "okay";
+
+	touchscreen@5d {
+		compatible = "goodix,gt9896";
+		reg = <0x5d>;
+
+		interrupt-parent = <&tlmm>;
+		interrupts = <68 IRQ_TYPE_EDGE_FALLING>;
+
+		reset-gpios = <&tlmm 69 GPIO_ACTIVE_LOW>;
+
+		avdd-supply = <&vreg_l10a>;
+		vddio-supply = <&vreg_l7a>;
+
+		touchscreen-size-x = <1080>;
+		touchscreen-size-y = <2340>;
+
+		pinctrl-0 = <&ts_irq &ts_reset>;
+		pinctrl-names = "default";
+	};
 };
 
 &i2c15 {
@@ -1135,6 +1152,20 @@
 		pins = "gpio66";
 		function = "mdp_vsync";
 		drive-strength = <2>;
+		bias-pull-down;
+	};
+
+	ts_irq: ts-irq-state {
+		pins = "gpio68";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-disable;
+	};
+
+	ts_reset: ts-reset-state {
+		pins = "gpio69";
+		function = "gpio";
+		drive-strength = <12>;
 		bias-pull-down;
 	};
 
