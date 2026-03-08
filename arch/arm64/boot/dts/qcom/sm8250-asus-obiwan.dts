@@ -958,6 +958,10 @@
 &pm8150b_typec {
 	vdd-pdphy-supply = <&vreg_l2a>;
 	vdd-vbus-supply = <&vreg_pm8150b_vbus>;
+	vbus-detect-gpios = <&tlmm 60 GPIO_ACTIVE_LOW>;
+
+	pinctrl-0 = <&side_ovp_acok_default>;
+	pinctrl-names = "default";
 
 	status = "okay";
 
