@@ -705,11 +705,12 @@
 		reg = <0x4e>;
 		interrupts-extended = <&tlmm 175 IRQ_TYPE_LEVEL_LOW>;
 		vbus-supply = <&vreg_rt1715_vbus>;
-		pinctrl-0 = <&rt1715_irq_default>;
+		pinctrl-0 = <&rt1715_irq_default>, <&rt1715_vbus_det_default>;
 		pinctrl-names = "default";
 
 		connector {
 			compatible = "usb-c-connector";
+			vbus-gpios = <&tlmm 13 GPIO_ACTIVE_LOW>;
 			power-role = "dual";
 			data-role = "dual";
 			try-power-role = "sink";
@@ -957,10 +958,14 @@
 	vdd-pdphy-supply = <&vreg_l2a>;
 	vdd-vbus-supply = <&vreg_pm8150b_vbus>;
 
+	pinctrl-0 = <&pm8150b_vbus_det_default>;
+	pinctrl-names = "default";
+
 	status = "okay";
 
 	connector {
 		compatible = "usb-c-connector";
+		vbus-gpios = <&tlmm 60 GPIO_ACTIVE_LOW>;
 		power-role = "dual";
 		data-role = "dual";
 		try-power-role = "source";
@@ -1082,6 +1087,13 @@
 		bias-disable;
 	};
 
+	rt1715_vbus_det_default: rt1715-vbus-det-default-state {
+		pins = "gpio13";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-disable;
+	};
+
 	disp_en_suspend: disp-en-suspend-state {
 		pins = "gpio12";
 		function = "gpio";
@@ -1119,6 +1131,13 @@
 			drive-strength = <2>;
 			bias-pull-down;
 		};
+	};
+
+	pm8150b_vbus_det_default: pm8150b-vbus-det-default-state {
+		pins = "gpio60";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-disable;
 	};
 
 	mdp_vsync: mdp-vsync-state {
@@ -1186,7 +1205,7 @@
 		bias-disable;
 	};
 
-	uart12_mux_default: uart12-mux-default-state {
+	uart12_en_default: uart12-default-state {
 		pins = "gpio170";
 		function = "gpio";
 		drive-strength = <2>;
@@ -1203,7 +1222,7 @@
 
 /* Debug UART is routed to bottom USB-C pins A11/B11 (TX) and A10/B10 (RX). */
 &uart12 {
-	pinctrl-0 = <&uart12_mux_default>;
+	pinctrl-0 = <&uart12_en_default>;
 	pinctrl-names = "default";
 
 	status = "okay";
