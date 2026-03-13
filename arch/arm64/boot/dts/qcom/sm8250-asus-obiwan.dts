@@ -962,6 +962,12 @@
 	};
 };
 
+&pm8150b_charger {
+	monitored-battery = <&battery>;
+
+	status = "okay";
+};
+
 &pm8150b_gpios {
 	rt1715_mux_en: rt1715-mux-en-default-state {
 		pins = "gpio10";
