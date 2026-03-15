@@ -433,6 +433,11 @@ static void smb_status_change_work(struct work_struct *work)
 	}
 
 	if (rc < 0) {
+		/* Check if USB is still online before retrying */
+		smb_get_prop_usb_online(chip, &usb_online);
+		if (!usb_online)
+			return;
+
 		rc = regmap_update_bits(chip->regmap, chip->base + CMD_APSD,
 					APSD_RERUN_BIT, APSD_RERUN_BIT);
 		schedule_delayed_work(&chip->status_change_work,
@@ -643,6 +648,9 @@ static irqreturn_t smb_handle_batt_overvoltage(int irq, void *data)
 static irqreturn_t smb_handle_usb_plugin(int irq, void *data)
 {
 	struct smb_chip *chip = data;
+
+	/* Cancel any pending APSD retry from a previous plug cycle */
+	cancel_delayed_work(&chip->status_change_work);
 
 	power_supply_changed(chip->chg_psy);
 
