@@ -660,6 +660,15 @@ static irqreturn_t smb_handle_usb_plugin(int irq, void *data)
 	return IRQ_HANDLED;
 }
 
+static irqreturn_t smb_handle_chg_state_change(int irq, void *data)
+{
+	struct smb_chip *chip = data;
+
+	power_supply_changed(chip->chg_psy);
+
+	return IRQ_HANDLED;
+}
+
 static irqreturn_t smb_handle_usb_icl_change(int irq, void *data)
 {
 	struct smb_chip *chip = data;
@@ -996,6 +1005,18 @@ static int smb_probe(struct platform_device *pdev)
 				FLOAT_VOLTAGE_SETTING_MASK, rc);
 	if (rc < 0)
 		return dev_err_probe(chip->dev, rc, "Couldn't set vbat max\n");
+
+	irq = platform_get_irq_byname_optional(
+			to_platform_device(chip->dev), "chg-state-change");
+	if (irq > 0) {
+		rc = devm_request_threaded_irq(chip->dev, irq, NULL,
+					       smb_handle_chg_state_change,
+					       IRQF_ONESHOT,
+					       "chg-state-change", chip);
+		if (rc < 0)
+			return dev_err_probe(chip->dev, rc,
+					     "Couldn't request chg-state-change IRQ\n");
+	}
 
 	rc = smb_init_irq(chip, &irq, "bat-ov", smb_handle_batt_overvoltage);
 	if (rc < 0)
