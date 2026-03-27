@@ -910,6 +910,12 @@
 	status = "okay";
 };
 
+&iris {
+	firmware-name = "qcom/milos/nothing/asteroids/vpu20_2v.mbn";
+
+	status = "okay";
+};
+
 &mdss {
 	status = "okay";
 };
