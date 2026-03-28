@@ -2631,6 +2631,36 @@
 				bias-pull-up;
 			};
 
+			i2s0_default_state: i2s0-default-state {
+				sck-pins {
+					pins = "gpio15";
+					function = "i2s0_sck";
+					drive-strength = <8>;
+					bias-disable;
+				};
+
+				data0-pins {
+					pins = "gpio16";
+					function = "i2s0_data0";
+					drive-strength = <8>;
+					bias-disable;
+				};
+
+				data1-pins {
+					pins = "gpio17";
+					function = "i2s0_data1";
+					drive-strength = <8>;
+					bias-disable;
+				};
+
+				ws-pins {
+					pins = "gpio18";
+					function = "i2s0_ws";
+					drive-strength = <8>;
+					bias-disable;
+				};
+			};
+
 			sdc2_default: sdc2-default-state {
 				clk-pins {
 					pins = "gpio62";
