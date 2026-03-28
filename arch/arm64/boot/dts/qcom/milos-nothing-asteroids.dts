@@ -139,6 +139,35 @@
 		};
 	};
 
+	sound {
+		compatible = "qcom,milos-sndcard", "qcom,sm8450-sndcard";
+		model = "Nothing_Phone_3a";
+
+		clocks = <&q6prmcc LPASS_CLK_ID_PRI_MI2S_IBIT LPASS_CLK_ATTRIBUTE_COUPLE_NO>,
+			 <&q6prmcc LPASS_CLK_ID_MCLK_1 LPASS_CLK_ATTRIBUTE_COUPLE_NO>;
+		clock-names = "primary-mi2s",
+			      "primary-mclk";
+
+		pinctrl-0 = <&i2s0_default_state>;
+		pinctrl-names = "default";
+
+		i2s-dai-link {
+			link-name = "Primary MI2S Playback";
+
+			codec {
+				sound-dai = <&tfa9873_l>, <&tfa9873_r>;
+			};
+
+			cpu {
+				sound-dai = <&q6apmbedai PRIMARY_MI2S_RX>;
+			};
+
+			platform {
+				sound-dai = <&q6apm>;
+			};
+		};
+	};
+
 	wcn6750-pmu {
 		compatible = "qcom,wcn6750-pmu"; /* WCN6755 */
 
@@ -898,6 +927,38 @@
 				remote-endpoint = <&pmic_glink_sbu>;
 			};
 		};
+	};
+};
+
+&i2c13 {
+	status = "okay";
+
+	tfa9873_l: audio-codec@34 {
+		compatible = "nxp,tfa9873";
+		reg = <0x34>;
+
+		reset-gpios = <&tlmm 141 GPIO_ACTIVE_HIGH>;
+		vddd-supply = <&vreg_l7b>;
+
+		max-coil-current = <13>;
+		sound-channel = <0>;
+		sound-name-prefix = "Amplifier L";
+
+		#sound-dai-cells = <0>;
+	};
+
+	tfa9873_r: audio-codec@35 {
+		compatible = "nxp,tfa9873";
+		reg = <0x35>;
+
+		reset-gpios = <&tlmm 142 GPIO_ACTIVE_HIGH>;
+		vddd-supply = <&vreg_l7b>;
+
+		max-coil-current = <13>;
+		sound-channel = <1>;
+		sound-name-prefix = "Amplifier R";
+
+		#sound-dai-cells = <0>;
 	};
 };
 
