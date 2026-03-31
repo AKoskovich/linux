@@ -27,24 +27,6 @@
 		serial1 = &uart11;
 	};
 
-	chosen {
-		#address-cells = <2>;
-		#size-cells = <2>;
-		ranges;
-
-		framebuffer0: framebuffer@e3940000 {
-			compatible = "simple-framebuffer";
-			reg = <0x0 0xe3940000 0x0 (2484 * 1116 * 4)>;
-			width = <1116>;
-			height = <2484>;
-			stride = <(1116 * 4)>;
-			format = "a8r8g8b8";
-			interconnects = <&mmss_noc MASTER_MDP QCOM_ICC_TAG_ALWAYS
-					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>;
-			clocks = <&gcc GCC_DISP_HF_AXI_CLK>;
-		};
-	};
-
 	gpio-keys {
 		compatible = "gpio-keys";
 
@@ -222,17 +204,6 @@
 
 		regulator-always-on;
 		regulator-boot-on;
-	};
-
-	reserved-memory {
-		/*
-		 * ABL is powering down display and controller if this node is
-		 * not named exactly "splash_region".
-		 */
-		splash_region@e3940000 {
-			reg = <0x0 0xe3940000 0x0 0x2b00000>;
-			no-map;
-		};
 	};
 
 	sound {
@@ -709,11 +680,6 @@
 		vcc-supply = <&vreg_l6p>;
 		read-only;
 	};
-};
-
-&dispcc {
-	/* Disable for now so simple-framebuffer continues working */
-	status = "disabled";
 };
 
 &gcc {
