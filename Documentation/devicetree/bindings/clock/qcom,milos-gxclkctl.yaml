@@ -22,6 +22,13 @@ properties:
     enum:
       - qcom,milos-gxclkctl
 
+  clocks:
+    maxItems: 1
+
+  clock-names:
+    items:
+      - const: ahb
+
   power-domains:
     description:
       Power domains required for the clock controller to operate
@@ -53,6 +60,8 @@ examples:
         clock-controller@3d64000 {
             compatible = "qcom,milos-gxclkctl";
             reg = <0x0 0x03d64000 0x0 0x6000>;
+            clocks = <&gpucc 17>;
+            clock-names = "ahb";
             power-domains = <&rpmhpd RPMHPD_GFX>,
                             <&gpucc 0>;
             #power-domain-cells = <1>;
