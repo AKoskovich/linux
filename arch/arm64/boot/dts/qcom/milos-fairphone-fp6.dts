@@ -39,17 +39,9 @@
 			height = <2484>;
 			stride = <(1116 * 4)>;
 			format = "a8r8g8b8";
-			panel = <&panel>;
 			interconnects = <&mmss_noc MASTER_MDP QCOM_ICC_TAG_ALWAYS
 					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>;
 			clocks = <&gcc GCC_DISP_HF_AXI_CLK>;
-
-			/* Dummy panel for simple-framebuffer dimension info */
-			panel: dummy-panel {
-				compatible = "boe,bj631jhm-t71-d900";
-				width-mm = <65>;
-				height-mm = <146>;
-			};
 		};
 	};
 
