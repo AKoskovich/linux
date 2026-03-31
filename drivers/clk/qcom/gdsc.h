@@ -76,6 +76,9 @@ struct gdsc {
 	const char 			*supply;
 	struct regulator		*rsupply;
 
+	struct clk_bulk_data		*toggle_clks;
+	int				num_toggle_clks;
+
 	bool				needs_icc;
 	unsigned int			icc_path_index;
 	struct icc_path			*icc_path;

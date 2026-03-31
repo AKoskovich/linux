@@ -4,6 +4,7 @@
  */
 
 #include <linux/bitops.h>
+#include <linux/clk.h>
 #include <linux/delay.h>
 #include <linux/err.h>
 #include <linux/export.h>
@@ -148,6 +149,10 @@ static int gdsc_toggle_logic(struct gdsc *sc, enum gdsc_status status,
 			return ret;
 	}
 
+	ret = clk_bulk_prepare_enable(sc->num_toggle_clks, sc->toggle_clks);
+	if (ret)
+		return ret;
+
 	ret = gdsc_update_collapse_bit(sc, status == GDSC_OFF);
 
 	/* If disabling votable gdscs, don't poll on status */
@@ -158,6 +163,7 @@ static int gdsc_toggle_logic(struct gdsc *sc, enum gdsc_status status,
 		 * unknown state
 		 */
 		udelay(TIMEOUT_US);
+		clk_bulk_disable_unprepare(sc->num_toggle_clks, sc->toggle_clks);
 		return 0;
 	}
 
@@ -177,6 +183,8 @@ static int gdsc_toggle_logic(struct gdsc *sc, enum gdsc_status status,
 
 	ret = gdsc_poll_status(sc, status);
 	WARN(ret, "%s status stuck at 'o%s'", sc->pd.name, status ? "ff" : "n");
+
+	clk_bulk_disable_unprepare(sc->num_toggle_clks, sc->toggle_clks);
 
 	if (!ret && status == GDSC_OFF && sc->rsupply) {
 		ret = regulator_disable(sc->rsupply);
