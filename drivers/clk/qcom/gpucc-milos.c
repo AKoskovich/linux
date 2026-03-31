@@ -346,6 +346,24 @@ static struct clk_branch gpu_cc_gx_acd_ahb_ff_clk = {
 	},
 };
 
+static struct clk_branch gpu_cc_gx_ahb_ff_clk = {
+	.halt_reg = 0x9064,
+	.halt_check = BRANCH_HALT,
+	.clkr = {
+		.enable_reg = 0x9064,
+		.enable_mask = BIT(0),
+		.hw.init = &(const struct clk_init_data) {
+			.name = "gpu_cc_gx_ahb_ff_clk",
+			.parent_hws = (const struct clk_hw*[]) {
+				&gpu_cc_ff_clk_src.clkr.hw,
+			},
+			.num_parents = 1,
+			.flags = CLK_SET_RATE_PARENT,
+			.ops = &clk_branch2_ops,
+		},
+	},
+};
+
 static struct clk_branch gpu_cc_gx_gmu_clk = {
 	.halt_reg = 0x9060,
 	.halt_check = BRANCH_HALT,
@@ -469,6 +487,7 @@ static struct clk_regmap *gpu_cc_milos_clocks[] = {
 	[GPU_CC_GMU_CLK_SRC] = &gpu_cc_gmu_clk_src.clkr,
 	[GPU_CC_GX_ACCU_SHIFT_CLK] = &gpu_cc_gx_accu_shift_clk.clkr,
 	[GPU_CC_GX_ACD_AHB_FF_CLK] = &gpu_cc_gx_acd_ahb_ff_clk.clkr,
+	[GPU_CC_GX_AHB_FF_CLK] = &gpu_cc_gx_ahb_ff_clk.clkr,
 	[GPU_CC_GX_GMU_CLK] = &gpu_cc_gx_gmu_clk.clkr,
 	[GPU_CC_GX_RCG_AHB_FF_CLK] = &gpu_cc_gx_rcg_ahb_ff_clk.clkr,
 	[GPU_CC_HLOS1_VOTE_GPU_SMMU_CLK] = &gpu_cc_hlos1_vote_gpu_smmu_clk.clkr,
@@ -504,7 +523,6 @@ static u32 gpu_cc_milos_critical_cbcrs[] = {
 	0x93a4, /* GPU_CC_CB_CLK */
 	0x9008, /* GPU_CC_CXO_AON_CLK */
 	0x9010, /* GPU_CC_DEMET_CLK */
-	0x9064, /* GPU_CC_GX_AHB_FF_CLK */
 	0x93a8, /* GPU_CC_RSCC_HUB_AON_CLK */
 	0x9004, /* GPU_CC_RSCC_XO_AON_CLK */
 	0x90cc, /* GPU_CC_SLEEP_CLK */
