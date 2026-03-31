@@ -1722,6 +1722,9 @@
 			compatible = "qcom,milos-gxclkctl";
 			reg = <0x0 0x03d64000 0x0 0x6000>;
 
+			clocks = <&gpucc GPU_CC_GX_AHB_FF_CLK>;
+			clock-names = "ahb";
+
 			power-domains = <&rpmhpd RPMHPD_GFX>,
 					<&gpucc GPU_CC_CX_GDSC>;
 
