@@ -3,6 +3,7 @@
  * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
  */
 
+#include <linux/clk.h>
 #include <linux/clk-provider.h>
 #include <linux/mod_devicetable.h>
 #include <linux/module.h>
@@ -59,8 +60,23 @@ static const struct of_device_id gx_clkctl_kaanapali_match_table[] = {
 };
 MODULE_DEVICE_TABLE(of, gx_clkctl_kaanapali_match_table);
 
+static struct clk_bulk_data gx_clkctl_gx_gdsc_clks[] = {
+	{ .id = "ahb" },
+};
+
 static int gx_clkctl_kaanapali_probe(struct platform_device *pdev)
 {
+	int ret;
+
+	ret = devm_clk_bulk_get_optional(&pdev->dev,
+					 ARRAY_SIZE(gx_clkctl_gx_gdsc_clks),
+					 gx_clkctl_gx_gdsc_clks);
+	if (ret)
+		return ret;
+
+	gx_clkctl_gx_gdsc.toggle_clks = gx_clkctl_gx_gdsc_clks;
+	gx_clkctl_gx_gdsc.num_toggle_clks = ARRAY_SIZE(gx_clkctl_gx_gdsc_clks);
+
 	return qcom_cc_probe(pdev, &gx_clkctl_kaanapali_desc);
 }
 
