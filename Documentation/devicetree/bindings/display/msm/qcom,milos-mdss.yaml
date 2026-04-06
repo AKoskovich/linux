@@ -76,10 +76,14 @@ unevaluatedProperties: false
 
 examples:
   - |
+    #include <dt-bindings/clock/qcom,dsi-phy-28nm.h>
+    #include <dt-bindings/clock/qcom,milos-dispcc.h>
+    #include <dt-bindings/clock/qcom,milos-gcc.h>
     #include <dt-bindings/clock/qcom,rpmh.h>
+    #include <dt-bindings/interconnect/qcom,icc.h>
+    #include <dt-bindings/interconnect/qcom,milos-rpmh.h>
     #include <dt-bindings/interrupt-controller/arm-gic.h>
     #include <dt-bindings/power/qcom,rpmhpd.h>
-    #include <dt-bindings/interconnect/qcom,milos-rpmh.h>
 
     display-subsystem@ae00000 {
         compatible = "qcom,milos-mdss";
@@ -108,8 +112,8 @@ examples:
         interrupt-controller;
         #interrupt-cells = <1>;
 
-        #address-cells = <2>;
-        #size-cells = <2>;
+        #address-cells = <1>;
+        #size-cells = <1>;
         ranges;
 
         display-controller@ae01000 {
