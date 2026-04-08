@@ -31,8 +31,9 @@
 
 #define TFA987X_TDM_CFG0		0x20
 #define TFA987X_TDM_CFG0_FSBCLKS_MSK	GENMASK(15, 12)
+#define TFA9873_TDM_CFG0_NSLOTS_MSK	GENMASK(4,  1)
 #define TFA987X_TDM_CFG1		0x21
-#define TFA987X_TDM_CFG1_NSLOTS_MSK	GENMASK(3,  0)
+#define TFA9872_TDM_CFG1_NSLOTS_MSK	GENMASK(3,  0)
 #define TFA987X_TDM_CFG1_SLOTBITS_MSK	GENMASK(8,  4)
 #define TFA987X_TDM_CFG2		0x22
 #define TFA987X_TDM_CFG2_SWIDTH_MSK	GENMASK(6,  2)
@@ -181,6 +182,7 @@ static bool tfa987x_setup_dcdc(struct device *dev, struct regmap *rmap, u16 rev)
 					TFA9872_DCDC_CTRL0_DCVOS_MSK,
 					FIELD_PREP(TFA9872_DCDC_CTRL0_DCVOS_MSK, dcvos));
 		break;
+	case 0x73:
 	case 0x74:
 		if (!FIELD_FIT(TFA9874_DCDC_CTRL6_DCVOF_MSK, dcvof) ||
 		    !FIELD_FIT(TFA9874_DCDC_CTRL6_DCVOS_MSK, dcvos))
@@ -235,6 +237,7 @@ static int tfa987x_i2c_probe(struct i2c_client *i2c)
 	}
 
 	switch (rev) {
+	case 0x0b73:
 	case 0x1b72:
 	case 0x2b72:
 	case 0x3b72:
@@ -259,13 +262,22 @@ static int tfa987x_i2c_probe(struct i2c_client *i2c)
 				 TFA987X_AUDIO_CTRL_DPSA_MSK, 0);
 
 	/* Setup TDM 16 bit 1 slot config */
-	regmap_update_bits(rmap, TFA987X_TDM_CFG0,
-				 TFA987X_TDM_CFG0_FSBCLKS_MSK,
-				 FIELD_PREP(TFA987X_TDM_CFG0_FSBCLKS_MSK, 0));
+	if ((rev & 0xff) == 0x73) {
+		regmap_update_bits(rmap, TFA987X_TDM_CFG0,
+				   TFA987X_TDM_CFG0_FSBCLKS_MSK |
+				   TFA9873_TDM_CFG0_NSLOTS_MSK,
+				   FIELD_PREP(TFA987X_TDM_CFG0_FSBCLKS_MSK, 0) |
+				   FIELD_PREP(TFA9873_TDM_CFG0_NSLOTS_MSK, 1));
+	} else {
+		regmap_update_bits(rmap, TFA987X_TDM_CFG0,
+				   TFA987X_TDM_CFG0_FSBCLKS_MSK,
+				   FIELD_PREP(TFA987X_TDM_CFG0_FSBCLKS_MSK, 0));
+		regmap_update_bits(rmap, TFA987X_TDM_CFG1,
+				   TFA9872_TDM_CFG1_NSLOTS_MSK,
+				   FIELD_PREP(TFA9872_TDM_CFG1_NSLOTS_MSK, 1));
+	}
 	regmap_update_bits(rmap, TFA987X_TDM_CFG1,
-				 TFA987X_TDM_CFG1_NSLOTS_MSK |
 				 TFA987X_TDM_CFG1_SLOTBITS_MSK,
-				 FIELD_PREP(TFA987X_TDM_CFG1_NSLOTS_MSK, 1) |
 				 FIELD_PREP(TFA987X_TDM_CFG1_SLOTBITS_MSK, 15));
 	regmap_update_bits(rmap, TFA987X_TDM_CFG2,
 				 TFA987X_TDM_CFG2_SWIDTH_MSK,
@@ -301,6 +313,7 @@ static int tfa987x_i2c_probe(struct i2c_client *i2c)
 
 static const struct of_device_id tfa987x_of_match[] = {
 	{ .compatible = "nxp,tfa9872" },
+	{ .compatible = "nxp,tfa9873" },
 	{ .compatible = "nxp,tfa9874" },
 	{ }
 };
@@ -315,5 +328,5 @@ static struct i2c_driver tfa987x_i2c_driver = {
 };
 module_i2c_driver(tfa987x_i2c_driver);
 
-MODULE_DESCRIPTION("ASoC NXP Semiconductors TFA9872/TFA9874 driver");
+MODULE_DESCRIPTION("ASoC NXP Semiconductors TFA9872/TFA9873/TFA9874 driver");
 MODULE_LICENSE("GPL v2");
