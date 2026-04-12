@@ -186,6 +186,11 @@ spmi_bus: &spmi_bus0 {};
 		vddrfa1p7-supply = <&vreg_s1b>;
 		vddrfa2p2-supply = <&vreg_s4b>;
 
+		clocks = <&rpmhcc RPMH_RF_CLK1>;
+
+		pinctrl-0 = <&pmk8550_sleep_clk_default>;
+		pinctrl-names = "default";
+
 		regulators {
 			vreg_pmu_rfa_cmn: ldo0 {
 				regulator-name = "vreg_pmu_rfa_cmn";
@@ -227,6 +232,53 @@ spmi_bus: &spmi_bus0 {};
 				regulator-name = "vreg_pmu_pcie_1p8";
 			};
 		};
+	};
+
+	wifi@17110040 {
+		compatible = "qcom,wcn6755-wifi", "qcom,wcn6750-wifi";
+		reg = <0x0 0x17110040 0x0 0x0>;
+
+		vddaon-supply = <&vreg_pmu_aon_0p59>;
+
+		iommus = <&apps_smmu 0x1480 0x1>;
+
+		interrupts = <GIC_SPI 768 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 769 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 770 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 771 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 772 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 773 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 774 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 775 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 776 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 777 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 778 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 779 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 780 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 781 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 782 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 783 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 784 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 785 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 786 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 787 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 788 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 789 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 790 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 791 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 792 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 793 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 794 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 795 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 796 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 797 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 798 IRQ_TYPE_EDGE_RISING>,
+			     <GIC_SPI 799 IRQ_TYPE_EDGE_RISING>;
+
+		qcom,calibration-variant = "Nothing_Phone_4a_Pro";
+		qcom,rproc = <&remoteproc_wpss>;
+		qcom,smem-states = <&smp2p_wlan_out 0>;
+		qcom,smem-state-names = "wlan-smp2p-out";
 	};
 };
 
@@ -603,6 +655,17 @@ spmi_bus: &spmi_bus0 {};
 	qcom,tune-usb2-amplitude = /bits/ 8 <0xd>;
 	qcom,tune-usb2-preem = /bits/ 8 <0x7>;
 	qcom,squelch-detector-bp = <(-2000)>;
+};
+
+&pmk8550_gpios {
+	pmk8550_sleep_clk_default: sleep-clk-default-state {
+		pins = "gpio3";
+		function = PMIC_GPIO_FUNC_FUNC1;
+		input-disable;
+		output-enable;
+		bias-disable;
+		power-source = <0>;
+	};
 };
 
 &pon_pwrkey {
