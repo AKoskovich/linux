@@ -32,7 +32,31 @@ spmi_bus: &spmi_bus0 {};
 	};
 
 	chosen {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
 		stdout-path = "serial0:115200n8";
+
+		framebuffer0: framebuffer@fc800000 {
+			compatible = "simple-framebuffer";
+			reg = <0x0 0xfc800000 0x0 (2800 * 1260 * 4)>;
+			width = <1260>;
+			height = <2800>;
+			stride = <(1260 * 4)>;
+			format = "a8r8g8b8";
+			panel = <&panel>;
+			interconnects = <&mmss_noc MASTER_MDP QCOM_ICC_TAG_ALWAYS
+					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>;
+			clocks = <&gcc GCC_DISP_HF_AXI_CLK>;
+
+			/* Dummy panel for simple-framebuffer dimension info */
+			panel: dummy-panel {
+				compatible = "boe,rm69260";
+				height-mm = <158>;
+				width-mm = <71>;
+			};
+		};
 	};
 
 	clocks {
@@ -133,6 +157,21 @@ spmi_bus: &spmi_bus0 {};
 
 		regulator-always-on;
 		regulator-boot-on;
+	};
+
+	reserved-memory {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		/*
+		 * ABL is powering down display and controller if this node is
+		 * not named exactly "splash_region".
+		 */
+		splash_region@fc800000 {
+			reg = <0x0 0xfc800000 0x0 0x02b00000>;
+			no-map;
+		};
 	};
 };
 
