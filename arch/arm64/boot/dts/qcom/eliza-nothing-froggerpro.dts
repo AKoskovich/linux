@@ -86,6 +86,36 @@ spmi_bus: &spmi_bus0 {};
 		};
 	};
 
+	pmic-glink {
+		compatible = "qcom,eliza-pmic-glink",
+			     "qcom,sm8550-pmic-glink",
+			     "qcom,pmic-glink";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		orientation-gpios = <&tlmm 122 GPIO_ACTIVE_HIGH>;
+
+		connector@0 {
+			compatible = "usb-c-connector";
+			reg = <0>;
+
+			power-role = "dual";
+			data-role = "dual";
+
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				port@0 {
+					reg = <0>;
+
+					pmic_glink_hs_in: endpoint {
+						remote-endpoint = <&usb_dwc3_hs>;
+					};
+				};
+			};
+		};
+	};
+
 	vph_pwr: regulator-vph-pwr {
 		compatible = "regulator-fixed";
 
@@ -442,12 +472,28 @@ spmi_bus: &spmi_bus0 {};
 	status = "okay";
 };
 
+&pmiv0104_eusb2_repeater {
+	vdd18-supply = <&vreg_l7b>;
+	vdd3-supply = <&vreg_l17b>;
+
+	qcom,tune-usb2-amplitude = /bits/ 8 <0xd>;
+	qcom,tune-usb2-preem = /bits/ 8 <0x7>;
+	qcom,squelch-detector-bp = <(-2000)>;
+};
+
 &pon_pwrkey {
 	status = "okay";
 };
 
 &pon_resin {
 	linux,code = <KEY_VOLUMEDOWN>;
+
+	status = "okay";
+};
+
+&remoteproc_adsp {
+	firmware-name = "qcom/eliza/nothing/froggerpro/adsp.mbn",
+			"qcom/eliza/nothing/froggerpro/adsp_dtb.mbn";
 
 	status = "okay";
 };
@@ -484,6 +530,30 @@ spmi_bus: &spmi_bus0 {};
 &ufs_mem_phy {
 	vdda-phy-supply = <&vreg_l6b>;
 	vdda-pll-supply = <&vreg_l4b>;
+
+	status = "okay";
+};
+
+&usb {
+	maximum-speed = "high-speed";
+	phys = <&usb_hsphy>;
+	phy-names = "usb2-phy";
+
+	/* USB 2.0 only, HW does not support USB 3.x */
+	qcom,select-utmi-as-pipe-clk;
+
+	status = "okay";
+};
+
+&usb_dwc3_hs {
+	remote-endpoint = <&pmic_glink_hs_in>;
+};
+
+&usb_hsphy {
+	vdd-supply = <&vreg_l7k>;
+	vdda12-supply = <&vreg_l4b>;
+
+	phys = <&pmiv0104_eusb2_repeater>;
 
 	status = "okay";
 };
