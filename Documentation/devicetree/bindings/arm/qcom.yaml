@@ -63,6 +63,7 @@ properties:
 
       - items:
           - enum:
+              - nothing,froggerpro
               - qcom,eliza-mtp
           - const: qcom,eliza
 
