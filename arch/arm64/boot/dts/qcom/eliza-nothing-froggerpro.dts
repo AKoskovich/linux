@@ -567,6 +567,12 @@ spmi_bus: &spmi_bus0 {};
 	status = "okay";
 };
 
+&remoteproc_wpss {
+	firmware-name = "qcom/eliza/nothing/froggerpro/wpss.mbn";
+
+	status = "okay";
+};
+
 &spi8 {
 	status = "okay";
 
