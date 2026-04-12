@@ -567,10 +567,41 @@ spmi_bus: &spmi_bus0 {};
 	status = "okay";
 };
 
+&spi8 {
+	status = "okay";
+
+	touchscreen@0 {
+		compatible = "focaltech,ft3683g";
+		reg = <0>;
+
+		pinctrl-0 = <&ts_default>;
+		pinctrl-names = "default";
+
+		reset-gpios = <&tlmm 16 GPIO_ACTIVE_LOW>;
+
+		interrupt-parent = <&tlmm>;
+		interrupts = <13 IRQ_TYPE_EDGE_FALLING>;
+		spi-max-frequency = <12000000>;
+
+		vci-supply = <&vreg_l22b>;
+		vddio-supply = <&vreg_l1g>;
+
+		touchscreen-size-x = <1260>;
+		touchscreen-size-y = <2800>;
+	};
+};
+
 &tlmm {
 	gpio-reserved-ranges = <20 4>,
 			       <111 2>, /* WCN UART1 */
 			       <118 1>;
+
+	ts_default: ts-default-state {
+		pins = "gpio13", "gpio16";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-pull-up;
+	};
 
 	assist_default: assist-default-state {
 		pins = "gpio34";
