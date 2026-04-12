@@ -1037,7 +1037,7 @@
 			reg = <0x0 0x088e3000 0x0 0x154>;
 			#phy-cells = <0>;
 
-			clocks = <&rpmhcc RPMH_CXO_CLK>;
+			clocks = <&tcsr TCSR_USB2_CLKREF_EN>;
 			clock-names = "ref";
 
 			resets = <&gcc GCC_QUSB2PHY_PRIM_BCR>;
