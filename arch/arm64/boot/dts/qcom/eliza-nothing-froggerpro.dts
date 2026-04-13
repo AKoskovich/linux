@@ -634,12 +634,30 @@ spmi_bus: &spmi_bus0 {};
 };
 
 &pm7550_gpios {
+	uim1_level_shift_en_default: uim1-level-shift-en-default {
+		pins = "gpio2";
+		function = PMIC_GPIO_FUNC_NORMAL;
+		power-source = <1>;
+		bias-disable;
+		input-disable;
+		output-high;
+	};
+
 	volume_up_default: volume-up-default-state {
 		pins = "gpio6";
 		function = PMIC_GPIO_FUNC_NORMAL;
 		input-enable;
 		power-source = <1>;
 		bias-pull-up;
+	};
+
+	uim0_level_shift_en_default: uim0-level-shift-en-default {
+		pins = "gpio11";
+		function = PMIC_GPIO_FUNC_NORMAL;
+		power-source = <1>;
+		bias-disable;
+		input-disable;
+		output-high;
 	};
 };
 
@@ -728,6 +746,17 @@ spmi_bus: &spmi_bus0 {};
 &remoteproc_adsp {
 	firmware-name = "qcom/eliza/nothing/froggerpro/adsp.mbn",
 			"qcom/eliza/nothing/froggerpro/adsp_dtb.mbn";
+
+	status = "okay";
+};
+
+&remoteproc_mpss {
+	pinctrl-0 = <&uim0_level_shift_en_default
+		     &uim1_level_shift_en_default>;
+	pinctrl-names = "default";
+
+	firmware-name = "qcom/eliza/nothing/froggerpro/modem.mbn",
+			"qcom/eliza/nothing/froggerpro/modem_dtb.mbn";
 
 	status = "okay";
 };
