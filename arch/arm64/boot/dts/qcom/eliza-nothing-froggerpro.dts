@@ -730,6 +730,13 @@ spmi_bus: &spmi_bus0 {};
 	status = "okay";
 };
 
+&remoteproc_mpss {
+	firmware-name = "qcom/eliza/nothing/froggerpro/modem.mbn",
+			"qcom/eliza/nothing/froggerpro/modem_dtb.mbn";
+
+	status = "okay";
+};
+
 &remoteproc_wpss {
 	firmware-name = "qcom/eliza/nothing/froggerpro/wpss.mbn";
 
