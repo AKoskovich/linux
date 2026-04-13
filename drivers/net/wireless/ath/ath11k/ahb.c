@@ -406,9 +406,20 @@ static int ath11k_ahb_power_up(struct ath11k_base *ab)
 	struct ath11k_ahb *ab_ahb = ath11k_ahb_priv(ab);
 	int ret;
 
+	if (ab_ahb->pwrseq) {
+		ret = pwrseq_power_on(ab_ahb->pwrseq);
+		if (ret) {
+			ath11k_err(ab, "failed to power on: %d\n", ret);
+			return ret;
+		}
+	}
+
 	ret = rproc_boot(ab_ahb->tgt_rproc);
-	if (ret)
+	if (ret) {
 		ath11k_err(ab, "failed to boot the remote processor Q6\n");
+		if (ab_ahb->pwrseq)
+			pwrseq_power_off(ab_ahb->pwrseq);
+	}
 
 	return ret;
 }
@@ -418,6 +429,9 @@ static void ath11k_ahb_power_down(struct ath11k_base *ab, bool is_suspend)
 	struct ath11k_ahb *ab_ahb = ath11k_ahb_priv(ab);
 
 	rproc_shutdown(ab_ahb->tgt_rproc);
+
+	if (ab_ahb->pwrseq)
+		pwrseq_power_off(ab_ahb->pwrseq);
 }
 
 static void ath11k_ahb_init_qmi_ce_config(struct ath11k_base *ab)
@@ -1108,6 +1122,7 @@ static int ath11k_ahb_fw_resource_deinit(struct ath11k_base *ab)
 
 static int ath11k_ahb_probe(struct platform_device *pdev)
 {
+	struct ath11k_ahb *ab_ahb;
 	struct ath11k_base *ab;
 	const struct ath11k_hif_ops *hif_ops;
 	const struct ath11k_pci_ops *pci_ops;
@@ -1150,6 +1165,13 @@ static int ath11k_ahb_probe(struct platform_device *pdev)
 	ab->hw_rev = hw_rev;
 	ab->fw_mode = ATH11K_FIRMWARE_MODE_NORMAL;
 	platform_set_drvdata(pdev, ab);
+
+	ab_ahb = ath11k_ahb_priv(ab);
+
+	ab_ahb->pwrseq = devm_pwrseq_get(&pdev->dev, "wlan");
+	if (IS_ERR(ab_ahb->pwrseq))
+		return dev_err_probe(&pdev->dev, PTR_ERR(ab_ahb->pwrseq),
+				     "failed to get pwrseq\n");
 
 	ret = ath11k_pcic_register_pci_ops(ab, pci_ops);
 	if (ret) {
