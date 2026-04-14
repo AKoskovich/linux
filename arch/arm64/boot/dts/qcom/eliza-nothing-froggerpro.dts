@@ -112,6 +112,14 @@ spmi_bus: &spmi_bus0 {};
 						remote-endpoint = <&usb_dwc3_hs>;
 					};
 				};
+
+				port@1 {
+					reg = <1>;
+
+					pmic_glink_sbu: endpoint {
+						remote-endpoint = <&fsa4480_sbu_mux>;
+					};
+				};
 			};
 		};
 	};
@@ -437,6 +445,28 @@ spmi_bus: &spmi_bus0 {};
 			regulator-min-microvolt = <880000>;
 			regulator-max-microvolt = <950000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+		};
+	};
+};
+
+&i2c0 {
+	clock-frequency = <400000>;
+
+	status = "okay";
+
+	typec-mux@42 {
+		compatible = "fcs,fsa4480";
+		reg = <0x42>;
+
+		vcc-supply = <&vph_pwr>;
+
+		mode-switch;
+		orientation-switch;
+
+		port {
+			fsa4480_sbu_mux: endpoint {
+				remote-endpoint = <&pmic_glink_sbu>;
+			};
 		};
 	};
 };
