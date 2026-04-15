@@ -150,6 +150,21 @@ spmi_bus: &spmi_bus0 {};
 		regulator-boot-on;
 	};
 
+	reserved-memory {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		ramoops@81f00000 {
+			compatible = "ramoops";
+			reg = <0x0 0x81f00000 0x0 0x300000>;
+			ecc-size = <16>;
+			record-size = <0x1000>;
+			console-size = <0x300000>;
+			no-map;
+		};
+	};
+
 	wcn6750-pmu {
 		compatible = "qcom,wcn6755-pmu", "qcom,wcn6750-pmu";
 
