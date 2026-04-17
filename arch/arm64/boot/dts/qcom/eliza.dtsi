@@ -2369,6 +2369,38 @@
 				};
 			};
 
+			i2s0_default_state: i2s0-default-state {
+				sck-pins {
+					pins = "gpio60";
+					function = "i2s0_sck";
+					drive-strength = <8>;
+					bias-disable;
+					output-high;
+				};
+
+				data0-pins {
+					pins = "gpio64";
+					function = "i2s0_data0";
+					drive-strength = <8>;
+					bias-disable;
+				};
+
+				data1-pins {
+					pins = "gpio63";
+					function = "i2s0_data1";
+					drive-strength = <8>;
+					bias-disable;
+				};
+
+				ws-pins {
+					pins = "gpio61";
+					function = "i2s0_ws";
+					drive-strength = <8>;
+					bias-disable;
+					output-high;
+				};
+			};
+
 			qup_uart5_cts_rts: qup-uart5-cts-rts-state {
 				qup_uart5_cts: cts-pins {
 					pins = "gpio132";
