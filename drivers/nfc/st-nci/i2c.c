@@ -46,6 +46,7 @@ struct st_nci_i2c_phy {
 	bool irq_active;
 	bool raw_nci;
 
+	struct clk *clk;
 	struct gpio_desc *gpiod_reset;
 
 	struct st_nci_se_status se_status;
@@ -60,15 +61,29 @@ static int st_nci_i2c_enable(void *phy_id)
 	 * chip-running. GPIO_ACTIVE_LOW: logical 1 asserts reset
 	 * (physical LOW).
 	 */
-	if (gpiod_is_active_low(phy->gpiod_reset)) {
+	if (gpiod_is_active_low(phy->gpiod_reset))
 		gpiod_set_value(phy->gpiod_reset, 1);
-		usleep_range(10000, 15000);
+	else
 		gpiod_set_value(phy->gpiod_reset, 0);
-	} else {
+
+	/*
+	 * The ST21NFCD (raw NCI) stops answering NCI after a poll on/off cycle
+	 * and does not recover on a reset pulse alone: its input clock has to be
+	 * stopped and restarted. The clock is enabled once at probe, so cycle it
+	 * here, while the controller is held in reset, on every power-up. Scoped
+	 * to the raw-NCI part; the NDLC parts keep their previous timing. The
+	 * usleep below is the reset-assert width and stays unconditional.
+	 */
+	if (phy->raw_nci)
+		clk_disable_unprepare(phy->clk);
+	usleep_range(10000, 15000);
+	if (phy->raw_nci)
+		clk_prepare_enable(phy->clk);
+
+	if (gpiod_is_active_low(phy->gpiod_reset))
 		gpiod_set_value(phy->gpiod_reset, 0);
-		usleep_range(10000, 15000);
+	else
 		gpiod_set_value(phy->gpiod_reset, 1);
-	}
 	usleep_range(80000, 85000);
 
 	if (phy->ndlc->powered == 0 && phy->irq_active == 0) {
@@ -282,9 +297,10 @@ static int st_nci_i2c_probe(struct i2c_client *client)
 	if (r && r != -ENODEV)
 		return dev_err_probe(dev, r, "failed to enable vdd-io\n");
 
-	r = PTR_ERR_OR_ZERO(devm_clk_get_optional_enabled(dev, NULL));
-	if (r)
-		return dev_err_probe(dev, r, "failed to enable clock\n");
+	phy->clk = devm_clk_get_optional_enabled(dev, NULL);
+	if (IS_ERR(phy->clk))
+		return dev_err_probe(dev, PTR_ERR(phy->clk),
+				     "failed to enable clock\n");
 
 	/* Get RESET GPIO */
 	phy->gpiod_reset = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
