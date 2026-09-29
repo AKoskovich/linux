@@ -29,6 +29,7 @@
 
 #define ST_NCI_I2C_MIN_SIZE 4   /* PCB(1) + NCI Packet header(3) */
 #define ST_NCI_NCI_HDR_SIZE 3   /* raw NCI: MT/PBF/GID + OID + len */
+#define ST_NCI_IDLE_BYTE 0x7e /* first read byte when the controller is idle (observed) */
 #define ST_NCI_I2C_MAX_SIZE 250 /* req 4.2.1 */
 
 enum st_nci_i2c_proto {
@@ -157,6 +158,15 @@ static int st_nci_i2c_read(struct st_nci_i2c_phy *phy,
 		if (r != ST_NCI_NCI_HDR_SIZE)
 			return -EREMOTEIO;
 
+		/*
+		 * The controller returns 0x7e as the first byte when it has
+		 * nothing to send; its IRQ can assert without a frame behind it.
+		 * Treat that as no-data, otherwise buf[2] is taken as a length and
+		 * the next real frame is read off the bus at the wrong offset.
+		 */
+		if (buf[0] == ST_NCI_IDLE_BYTE)
+			return -ENODATA;
+
 		len = buf[2];
 		if (len > ST_NCI_I2C_MAX_SIZE) {
 			nfc_err(&client->dev, "invalid frame len\n");
@@ -247,7 +257,7 @@ static irqreturn_t st_nci_irq_thread_fn(int irq, void *phy_id)
 	}
 
 	r = st_nci_i2c_read(phy, &skb);
-	if (r == -EREMOTEIO || r == -ENOMEM || r == -EBADMSG)
+	if (r == -EREMOTEIO || r == -ENOMEM || r == -EBADMSG || r == -ENODATA)
 		return IRQ_HANDLED;
 
 	ndlc_recv(phy->ndlc, skb);
