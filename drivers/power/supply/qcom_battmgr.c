@@ -74,6 +74,7 @@ enum qcom_battmgr_variant {
 #define BATT_CHG_CTRL_EN		24
 #define BATT_CHG_CTRL_START_THR		25
 #define BATT_CHG_CTRL_END_THR		26
+#define BATT_CURR_AVG			27
 
 #define BATTMGR_USB_PROPERTY_GET	0x32
 #define BATTMGR_USB_PROPERTY_SET	0x33
@@ -275,6 +276,7 @@ struct qcom_battmgr_status {
 	unsigned int capacity;
 	unsigned int percent;
 	int current_now;
+	int current_avg;
 	int power_now;
 	unsigned int voltage_now;
 	unsigned int voltage_ocv;
@@ -436,6 +438,7 @@ static const u8 sm8350_bat_prop_map[] = {
 	[POWER_SUPPLY_PROP_VOLTAGE_NOW] = BATT_VOLT_NOW,
 	[POWER_SUPPLY_PROP_VOLTAGE_MAX] = BATT_VOLT_MAX,
 	[POWER_SUPPLY_PROP_CURRENT_NOW] = BATT_CURR_NOW,
+	[POWER_SUPPLY_PROP_CURRENT_AVG] = BATT_CURR_AVG,
 	[POWER_SUPPLY_PROP_TEMP] = BATT_TEMP,
 	[POWER_SUPPLY_PROP_TECHNOLOGY] = BATT_TECHNOLOGY,
 	[POWER_SUPPLY_PROP_CHARGE_COUNTER] =  BATT_CHG_COUNTER,
@@ -561,6 +564,9 @@ static int qcom_battmgr_bat_get_property(struct power_supply *psy,
 		break;
 	case POWER_SUPPLY_PROP_CURRENT_NOW:
 		val->intval = battmgr->status.current_now;
+		break;
+	case POWER_SUPPLY_PROP_CURRENT_AVG:
+		val->intval = battmgr->status.current_avg;
 		break;
 	case POWER_SUPPLY_PROP_POWER_NOW:
 		val->intval = battmgr->status.power_now;
@@ -906,6 +912,7 @@ static const enum power_supply_property sm8550_bat_props[] = {
 	POWER_SUPPLY_PROP_VOLTAGE_NOW,
 	POWER_SUPPLY_PROP_VOLTAGE_MAX,
 	POWER_SUPPLY_PROP_CURRENT_NOW,
+	POWER_SUPPLY_PROP_CURRENT_AVG,
 	POWER_SUPPLY_PROP_TEMP,
 	POWER_SUPPLY_PROP_TECHNOLOGY,
 	POWER_SUPPLY_PROP_CHARGE_COUNTER,
@@ -1461,6 +1468,9 @@ static void qcom_battmgr_sm8350_callback(struct qcom_battmgr *battmgr,
 			break;
 		case BATT_CURR_NOW:
 			battmgr->status.current_now = le32_to_cpu(resp->intval.value);
+			break;
+		case BATT_CURR_AVG:
+			battmgr->status.current_avg = le32_to_cpu(resp->intval.value);
 			break;
 		case BATT_TEMP:
 			val = le32_to_cpu(resp->intval.value);
