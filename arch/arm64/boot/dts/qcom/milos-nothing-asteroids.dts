@@ -586,6 +586,26 @@
 	firmware-name = "qcom/milos/nothing/asteroids/gen80300_zap.mbn";
 };
 
+&i2c1 {
+	clock-frequency = <400000>;
+
+	status = "okay";
+
+	nfc@8 {
+		compatible = "st,st21nfcd";
+		reg = <0x08>;
+
+		interrupts-extended = <&tlmm 31 IRQ_TYPE_LEVEL_HIGH>;
+
+		reset-gpios = <&tlmm 7 GPIO_ACTIVE_LOW>;
+
+		vdd-io-supply = <&vreg_l7b>;
+
+		pinctrl-0 = <&nfc_clkreq_default>, <&nfc_reset_default>, <&nfc_int_default>;
+		pinctrl-names = "default";
+	};
+};
+
 &i2c7 {
 	clock-frequency = <400000>;
 
@@ -1120,6 +1140,21 @@
 	gpio-reserved-ranges = <13 1>, /* Display */
 			       <63 2>; /* WLAN UART */
 
+	nfc_clkreq_default: nfc-clkreq-default-state {
+		pins = "gpio6";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-disable;
+		qcom,wakeup-enable;
+	};
+
+	nfc_reset_default: nfc-reset-default-state {
+		pins = "gpio7";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-disable;
+	};
+
 	disp_reset_n_active: disp-reset-n-active-state {
 		pins = "gpio12";
 		function = "gpio";
@@ -1139,6 +1174,13 @@
 		function = "gpio";
 		drive-strength = <8>;
 		bias-pull-up;
+	};
+
+	nfc_int_default: nfc-int-default-state {
+		pins = "gpio31";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-down;
 	};
 
 	qup_uart11_sleep_cts: qup-uart11-sleep-cts-state {
