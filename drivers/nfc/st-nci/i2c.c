@@ -144,7 +144,7 @@ static int st_nci_i2c_write(void *phy_id, struct sk_buff *skb)
 static int st_nci_i2c_read(struct st_nci_i2c_phy *phy,
 				 struct sk_buff **skb)
 {
-	int r;
+	int r, idle;
 	u8 len;
 	u8 buf[ST_NCI_I2C_MAX_SIZE];
 	struct i2c_client *client = phy->i2c_dev;
@@ -159,13 +159,25 @@ static int st_nci_i2c_read(struct st_nci_i2c_phy *phy,
 			return -EREMOTEIO;
 
 		/*
-		 * The controller returns 0x7e as the first byte when it has
-		 * nothing to send; its IRQ can assert without a frame behind it.
-		 * Treat that as no-data, otherwise buf[2] is taken as a length and
-		 * the next real frame is read off the bus at the wrong offset.
+		 * The controller returns 0x7e when it has nothing to send, and a
+		 * frame can follow idle bytes in the same read. Treat an all-idle
+		 * header as no-data, otherwise drop the idle bytes and read the
+		 * rest of the header.
 		 */
-		if (buf[0] == ST_NCI_IDLE_BYTE)
+		for (idle = 0; idle < ST_NCI_NCI_HDR_SIZE &&
+		     buf[idle] == ST_NCI_IDLE_BYTE; idle++)
+			;
+
+		if (idle == ST_NCI_NCI_HDR_SIZE)
 			return -ENODATA;
+
+		if (idle) {
+			memmove(buf, buf + idle, ST_NCI_NCI_HDR_SIZE - idle);
+			r = i2c_master_recv(client,
+					    buf + ST_NCI_NCI_HDR_SIZE - idle, idle);
+			if (r != idle)
+				return -EREMOTEIO;
+		}
 
 		len = buf[2];
 		if (len > ST_NCI_I2C_MAX_SIZE) {
