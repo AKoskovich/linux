@@ -87,6 +87,17 @@ $defs:
       output-high: true
       output-low: true
 
+      qcom,wakeup-enable:
+        type: boolean
+        description:
+          Forward events on this pin out of the TLMM, to the wakeup interrupt
+          controller (PDC/MPM) and to other hardware monitoring the pin. Despite
+          the name this isn't limited to wakeup, and it applies while the system
+          is running. The driver sets it for pins requested as GPIO interrupts,
+          so this is only needed for pins that are monitored without a GPIO
+          interrupt, such as a clock request handled in hardware or a SoundWire
+          data line.
+
     allOf:
       - $ref: pincfg-node.yaml#
       - $ref: pinmux-node.yaml#
