@@ -64,6 +64,7 @@ struct msm_pin_state {
  * @skip_wake_irqs: Skip IRQs that are handled by wakeup interrupt controller
  * @disabled_for_mux: These IRQs were disabled because we muxed away.
  * @ever_gpio:      This bit is set the first time we mux a pin to gpio_func.
+ * @wakeup_pins:    Pins whose wakeup_enable bit was armed from pin config.
  * @soc:            Reference to soc_data of platform specific data.
  * @regs:           Base addresses for the TLMM tiles.
  * @phys_base:      Physical base address
@@ -86,6 +87,7 @@ struct msm_pinctrl {
 	DECLARE_BITMAP(skip_wake_irqs, MAX_NR_GPIO);
 	DECLARE_BITMAP(disabled_for_mux, MAX_NR_GPIO);
 	DECLARE_BITMAP(ever_gpio, MAX_NR_GPIO);
+	DECLARE_BITMAP(wakeup_pins, MAX_NR_GPIO);
 
 	const struct msm_pinctrl_soc_data *soc;
 	void __iomem *regs[MAX_NR_TILES];
@@ -301,9 +303,9 @@ static const struct pinmux_ops msm_pinmux_ops = {
 /*
  * "qcom,wakeup-enable" arms the wakeup_enable bit of a pin from its pin
  * configuration. The driver already does this for pins requested as GPIO
- * interrupts, but that path takes over the pin mux. A pin that has to stay
- * muxed to a peripheral function and is toggled by an external device to
- * request a wake up needs the bit armed without being turned into a GPIO.
+ * interrupts, but some pins need it with no interrupt requested: a pin that has
+ * to stay muxed to a peripheral function, or one monitored by other hardware
+ * while the system is running, such as a clock request.
  */
 #define MSM_PINCONF_WAKEUP_ENABLE	(PIN_CONFIG_END + 1)
 
@@ -521,6 +523,7 @@ static int msm_config_group_set(struct pinctrl_dev *pctldev,
 				return ret;
 			}
 
+			assign_bit(group, pctrl->wakeup_pins, arg);
 			continue;
 		}
 
@@ -1349,8 +1352,12 @@ static void msm_gpio_irq_relres(struct irq_data *d)
 	struct msm_pinctrl *pctrl = gpiochip_get_data(gc);
 	const struct msm_pingroup *g = &pctrl->soc->groups[d->hwirq];
 
-	/* Disable the wakeup_enable bit if it has been set in msm_gpio_irq_reqres() */
-	msm_pin_set_wakeup_enable(pctrl, g, false);
+	/*
+	 * Disable the wakeup_enable bit if it has been set in msm_gpio_irq_reqres(),
+	 * unless the pin config still wants it armed.
+	 */
+	if (!test_bit(d->hwirq, pctrl->wakeup_pins))
+		msm_pin_set_wakeup_enable(pctrl, g, false);
 
 	gpiochip_unlock_as_irq(gc, d->hwirq);
 	module_put(gc->owner);
